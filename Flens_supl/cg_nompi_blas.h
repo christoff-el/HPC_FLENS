@@ -20,7 +20,7 @@ cg_nompi_blas(const MA &A, const VB &b, VX &x,
 
 //Wrapper: Funken --> FLENS --> Funken
 int
-cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, 
+cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
 							int maxIt, double tol);
 
 #endif	//CG_NOMPI_BLAS_H

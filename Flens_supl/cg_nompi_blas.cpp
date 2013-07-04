@@ -5,9 +5,9 @@
 
 
 //FLENS-based CG solver:
-template <typename MA, typename VX, typename VB>
+template <typename MA, typename VX, typename VB, typename VBC>
 int
-cg_nompi_blas(const MA &A, const VB &b, VX &x,
+cg_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max(),
    double tol = std::numeric_limits<double>::epsilon())
 {
@@ -22,9 +22,19 @@ cg_nompi_blas(const MA &A, const VB &b, VX &x,
 
     const ElementType  Zero(0), One(1);
 
+	//Set x to 0 at dirichlet nodes (where the value is fixed):
+    for(int i=0; i<bc.length(); ++i) {
+        x(bc(i)) = 0;
+    }
+    
     blas::copy(b, r);
     blas::mv(NoTrans, -One, A, x, One, r);
 
+	//Set r to 0 at dirichlet nodes:
+    for(int i=0; i<bc.length(); ++i) {
+        r(bc(i)) = 0;
+    }
+    
     blas::copy(r, p);
 
     rNormSquare = blas::dot(r, r);
@@ -37,6 +47,11 @@ cg_nompi_blas(const MA &A, const VB &b, VX &x,
 
         blas::mv(NoTrans, One, A, p, Zero, Ap);
 
+ 		//Set Ap to zero at dirichlet nodes:
+        for(int i=0; i<bc.length(); ++i) {
+        	Ap(bc(i)) = 0;
+    	}
+    	
         alpha = rNormSquare/blas::dot(p, Ap);
 
         blas::axpy(alpha, p, x);
@@ -60,13 +75,16 @@ cg_nompi_blas(const MA &A, const VB &b, VX &x,
 
 //Wrapper: Funken --> FLENS --> Funken
 int
-cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, 
+cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
 							int maxIt, double tol)
 {
 
 	typedef int                                              IndexType;
     typedef flens::IndexOptions<IndexType, 1>         		 IndexBase;
     typedef flens::DenseVector<flens::Array<double> >		 DenseVector;
+    
+    //Check if sizes of matrices & vectors fit:
+    assert(fk_A.numRows()==fk_b.length() && fk_A.numCols()==fk_x.length());
     
 	//Convert Funken CRSMatrix A --> FLENS CRS Matrix:
 	flens::GeCRSMatrix<flens::CRS<double, IndexBase> > fl_A;
@@ -79,11 +97,11 @@ cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b,
 	//Solve using the FLENS-based CG solver:
 	int iterCount;
 	DenseVector fl_x(fl_b.length());
-	iterCount = cg_nompi_blas(fl_A, fl_b, fl_x, maxIt, tol);
+	iterCount = cg_nompi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
 
 	//Convert solution FLENS DenseVector x --> Funken Vector:
 	flens2funk_Vector(fl_x, fk_x);
-
+	
 	return iterCount;
 }
 

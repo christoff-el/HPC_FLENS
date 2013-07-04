@@ -28,7 +28,7 @@ MathOperationsMPI.o: DataVector.o Mesh.o MathOperationsMPI.cpp MathOperationsMPI
 Mesh.o:  Coupling.o Mesh.cpp Mesh.hpp 
 	$(CC) $(CPPFLAGS)  Mesh.cpp
 Solver.o:  Mesh.o MathOperationsMPI.o DataVector.o Solver.cpp Solver.hpp 
-		$(CC) $(CPPFLAGS)  -L../Flens_supl -lFlens Solver.cpp
+	$(CC) $(CPPFLAGS)  Solver.cpp
 Fem.o: Mesh.o DataVector.o Solver.o Fem.cpp Fem.hpp 
 	$(CC) $(CPPFLAGS)  Fem.cpp
 

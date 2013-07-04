@@ -5,9 +5,8 @@
 
 
 //FLENS DenseVector --> Funken Vector:
-template <typename FLENSX, typename FUNKX>
 void
-flens2funk_Vector(FLENSX &fl_x, FUNKX &fk_x)
+flens2funk_Vector(flens::DenseVector<flens::Array<double> > &fl_x, Vector &fk_x)
 {
 
 	assert(fl_x.length()==fk_x.length());

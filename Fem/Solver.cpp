@@ -6,16 +6,9 @@
 
 int CG(CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes,  int maxIt, double tol)
 {
-    // check if sizes of matrices & vectors fit //
-    assert(A.numRows()==b.length() && A.numCols()==x.length());
-
-     // set x to 0 at dirichlet nodes (where the value is fixed)//
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-        x( dirichletNodes(i)-1 ) = 0;
-    }
     
     //Solve for x using CG method under FLENS framework:
-    maxIt = cg_nompi_blas_wrapper(A, x, b, maxIt, tol);
+    maxIt = cg_nompi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
 
     return maxIt;    
 }
