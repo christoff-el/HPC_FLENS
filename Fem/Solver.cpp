@@ -8,60 +8,15 @@ int CG(CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes,  int max
 {
     // check if sizes of matrices & vectors fit //
     assert(A.numRows()==b.length() && A.numCols()==x.length());
-      
-    // initizalize variables
-    double alpha, beta, rdot, rdotOld;
-    Vector Ap(x), p(x), r(b);
-    
+
      // set x to 0 at dirichlet nodes (where the value is fixed)//
     for(int i = 0; i < dirichletNodes.length(); i++) {
         x( dirichletNodes(i)-1 ) = 0;
     }
     
-    // compute residual:
-    //  p = A*x
-    //  r = b - A*x = b - p
-    A.matVec(p, x);
-    r.add(p,-1.);
-    
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-        r( dirichletNodes(i)-1 ) = 0;
-    }
-    
-    /* *** initialize direction p */
-    p=r;
-    /* *** compute  squared Norm of residuum rdot = r*r*/
-    rdot = r.dot(r);
+    //Solve for x using CG method under FLENS framework:
+    maxIt = cg_nompi_blas_wrapper(A, x, b, maxIt, tol);
 
-    for (int k=0; k<maxIt; k++) {
-        /* *** abort criterion */
-        if (sqrt(rdot) <= tol) {
-              return k;
-        }
-
-         /* *** compute  Ap = A*p  and set Ap to zero at dirichlet nodes */
-        A.matVec(Ap,p);
-        for(int i = 0; i < dirichletNodes.length(); i++) {
-              Ap( dirichletNodes(i)-1 ) = 0;
-        }
-        
-        /* *** compute alpha = rdot/(p * Ap) */
-        alpha = rdot / p.dot( Ap);
-    
-        /* *** update solution x  by x += alpha*p */
-        x.add(p,alpha);
-      
-        /* *** update residual by r -= alpha*Ap */
-        r.add(Ap,-alpha);
-
-        /* *** compute  squared Norm of updated residuum rdot = r*r*/
-        rdotOld = rdot;
-        rdot = r.dot(r);
-        beta = rdot/rdotOld;
-        /* *** update direction p by p = beta*p + r */
-        p.mul(beta);
-        p.add(r);        
-    }
     return maxIt;    
 }
 

@@ -2,7 +2,10 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include <flens/flens.cxx>
+
 #include "../LinearAlgebra/LinAlgHeader.hpp"
+#include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
 #include "Functions.hpp"
 

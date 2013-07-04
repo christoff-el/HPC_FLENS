@@ -1,6 +1,6 @@
 OS = $(shell uname -s)
 
-LDLIBS  := -L../LinearAlgebra -lLinAlg -L../Fem -lFem
+LDLIBS  := -L../LinearAlgebra -lLinAlg -L../Fem -lFem -L../Flens_supl -lFlens
 
 ifeq ($(OS),Darwin)
   CC  := mpic++
@@ -15,12 +15,12 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -I. -I.. -I/opt/local/include/openmpi $(LIBS)
+CPPFLAGS = -Wall -I. -I.. -I/opt/local/include/openmpi $(LIBS) -I/usr/local/FLENS -std=c++11
 #CPPFLAGS = -Wall -I. -I.. $(LIBS)
 
 .PHONY:   all clean
 
-all: main-parallel main-serial
+all: main-serial main-parallel 
 main-serial: main-serial.cpp
 	$(CC) $(LDLIBS) $(CPPFLAGS) main-serial.cpp -o main-serial
 main-parallel: main-parallel.cpp

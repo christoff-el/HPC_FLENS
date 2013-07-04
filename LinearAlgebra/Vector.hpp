@@ -26,15 +26,16 @@ class IndexVector{
 		IndexVector & operator=(const IndexVector &rhs);
 		int & operator()(const int n) const;
 		/* *** math operations  *******************************************/
-		int dot(IndexVector &x);									// scalar product: returns this*x
-		int max();																// maximum: returns max(this)
+		int dot(IndexVector &x);					// scalar product: returns this*x
+		int max();									// maximum: returns max(this)
 		void add(IndexVector &x, int alpha=1);		// this += alpha*x 
-		void mul(int alpha);											// this *= alpha
+		void mul(int alpha);						// this *= alpha
 		/* *** write and read *********************************************/
 		void write(std::string filename);
 		void read(std::string filename);
 		/* *** other functions ********************************************/
 		void resize(int length);
+		
 	/* *** private variables **********************************************/
 	private:
 		int _length;

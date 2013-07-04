@@ -17,13 +17,13 @@ class CRSMatrix{
 		/* *** Consturctor & Destructor */
 		CRSMatrix();
 		CRSMatrix(IndexVector &row, IndexVector &col,Vector &data);
-	  CRSMatrix(const CRSMatrix &rhs);
-	  ~CRSMatrix();
+	  	CRSMatrix(const CRSMatrix &rhs);
+	  	~CRSMatrix();
 
 		/* *** getter & setter methods */
 		int nonZeros() const;
-	  int numCols() const;
-	  int numRows() const;
+	  	int numCols() const;
+	  	int numRows() const;
 		//double get(int row,int col) const;
 		//double get(int k) const;
 		double* data() const;
