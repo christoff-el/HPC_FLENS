@@ -16,6 +16,7 @@ funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::
 	int n = fk_A.numRows();
 	int m = fk_A.numCols();
 	
+	//FLENS CRS must be built from a Coordinate storage matrix:
     flens::GeCoordMatrix<Coord>  fl_A_coord(n, m);
 
 	double *fk_data   = fk_A.data();
@@ -31,6 +32,7 @@ funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::
 		}
 	}
 
+	//Convert coordinate storage matrix to CRS:
 	fl_A = fl_A_coord;
 
 }

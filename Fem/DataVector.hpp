@@ -20,7 +20,7 @@ class DataVector {
                const int size=1 , const vectorType _type=nonMPI);
 
     DataVector(const DataVector &rhs);
-        
+
     /* *** overloading operators ***********************************/
     DataVector& operator =(const DataVector &rhs);
 
