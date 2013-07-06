@@ -84,33 +84,8 @@ int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNod
 
 int forwardGS( CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes, int maxIt, double tol)
 {
-
-    double * Adata = A.data();
-    int * ArowPtr = A.rowPtr();
-    int * AcolIndex = A.colIndex();
-
-    Vector nodeType(x.length()); // nodeType(i)==1 => ith node is fixed!
-     // set x to zero at fixed nodes
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-        x( dirichletNodes(i)-1 ) = 0;
-        nodeType( dirichletNodes(i)-1 ) = 1;    
-    }
-
-    for (int k=0; k<maxIt; k++) {
-
-        // compute Gauß-Seidel step in forward direction only at FREE NODES
-        for(int j=0;j<x.length(); j++){
-            if(nodeType(j)==0){    
-                double tmp1=0;
-                for(int mu=ArowPtr[j] ; mu<ArowPtr[j+1]; mu++){
-                    tmp1 += Adata[mu]*x( AcolIndex[mu] );
-                }
-
-                x(j) += ( b(j)-tmp1 )/A(j,j);
-            }
-        }
-
-    }
+    maxIt = gs_dense_nompi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
+        
     return maxIt;    
 }
 
