@@ -48,8 +48,8 @@ double dot(DataVector &u, DataVector &v)
 	double buf=0;
 	
 	/* *** communication to add values from others procs */
-  MPI::COMM_WORLD.Allreduce(&value, &buf, 1,MPI::DOUBLE,MPI::SUM);
-  return buf;
+  	MPI::COMM_WORLD.Allreduce(&value, &buf, 1,MPI::DOUBLE,MPI::SUM);
+  	return buf;
 }
 
 // compute u += alpha*v

@@ -63,6 +63,9 @@ int main(int argc, char *argv[]){
     
     /* *** create local mesh */
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
+    mesh.refineRed();
+    mesh.refineRed();
+    mesh.refineRed();
     mesh.writeData(rank);
     
     /* *** create fem object and assemble linear system*/
@@ -70,7 +73,7 @@ int main(int argc, char *argv[]){
     fem.assemble();
 
     fem.solve(cg);
-	fem.writeSolution();
+	fem.writeSolution(rank);
     
     MPI::Finalize();
     return 0;

@@ -12,21 +12,39 @@ struct FLENSDataVector
 	typedef double	ElementType;
     typedef int   	IndexType;
 
-	/*explicit
+	explicit
 	FLENSDataVector(int n)
-		: DenseVector<Array<double> >(n),
-		  vals(n)
-		{}*/
+		:	DenseVector<Array<double> >(n)
+		{}
+		
+	explicit
+	FLENSDataVector(FLENSDataVector &rhs)
+		: DenseVector<Array<double> >(rhs)
+		{}
 	
-	DenseVector<Array<double> > vals;
+	//DenseVector<Array<double> > vals;
+    int uhoh=1;
     
-    int sayHi(int n);
+    	
+    
+    
+    
 
 
 };
 
-int
-FLENSDataVector::sayHi(int n){return (*this)(n);}
+
+
+namespace flens {namespace blas {
+void
+copy(FLENSDataVector &a, FLENSDataVector &b){
+cout<<"Hahaha"<<endl;
+
+//DenseVector<Array<double> > *tmpa = &a;
+//DenseVector<Array<double> > *tmpb = &b;
+
+blas::copy(*static_cast<DenseVector<Array<double> > *>(&b), *static_cast<DenseVector<Array<double> > *>(&a));}
+    }}
 
 int main() {
 
@@ -34,14 +52,19 @@ int main() {
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
     
-    DenseVector<Array<double> > b(5);
+    FLENSDataVector b(5);
     b(2)=99;
+    b(3)=1;
     
-	FLENSDataVector a;
+	FLENSDataVector a(5);
 	
-	blas::copy(b,a);
+	flens::blas::copy(a,b);
+	
+	
+	//blas::copy(b,a);
 	
 	cout << a << endl;
+	cout << a.uhoh << endl;
 	
 	//cout << a.sayHi(1) << endl;
 

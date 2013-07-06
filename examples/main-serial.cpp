@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 	b.writeData(0,"./output/b_serial");
 	
 	/* *** solve problem using the cg method */
-    fem.solve(cg);
+    fem.solve(gs);
 	
 	fem.writeSolution();
 	

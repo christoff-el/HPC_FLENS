@@ -1,4 +1,4 @@
-#ifndef FLENS2C_CPP
+/*#ifndef FLENS2C_CPP
 #define FLENS2C_CPP 1
 
 #include "flens2c.h"
@@ -14,7 +14,7 @@ flens2c_DataVector(flens::FLENSDataVector &fl_x, double *fk_x)
 	//Copy FLENS vector to C array:
 	for (int i=1; i<=fl_x.length(); ++i) {
 	
-		fk_x(i-1) = fl_x(i);
+		fk_x[i-1] = fl_x(i);
 	
 	}
 

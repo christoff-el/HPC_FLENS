@@ -15,67 +15,11 @@ int CG(CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes,  int max
 
 int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNodes,  int maxIt, double tol)
 {
-    // check if sizes of matrices & vectors fit 
-    assert(A.numRows()==b.values.length() && A.numCols()==x.values.length());
-    assert(x.type==typeI && b.type==typeII);
-    
-    // initizalize variables
-    // r1/r2 are the typeI / typeII vectors for the residual
-    // Note: r2 is already a copy of b
-    double alpha, beta, rdot, rdotOld;
-    DataVector Ap(x), r1(x), p(x), r2(b);
-    
-     // set x to 0 at dirichlet nodes (where the value is fixed)
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-          x.values( dirichletNodes(i)-1) = 0;
-    }
-    
-    // compute residual:
-    //  p = A*x               ->  p is typeII
-    //  r2 = b - A*x = b - p  -> r2 is typeII
-    CRSmatVec(p,A,x);
-    add(r2,p,-1.);
-    
-    // set r2 to 0 at dirichlet nodes 
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-          r2.values( dirichletNodes(i)-1 ) = 0;
-    }
-    
-    /* *** initialize direction p (as typeI residual )*/
-    r1=r2;
-    r1.typeII_2_typeI();
-    p=r1;
-    
-     /* *** compute squared Norm of residuum rdot = r*r */
-    rdot = dot(r1,r2);
-    for (int k=0; k<maxIt; k++) {
-        /* *** abort criterion */
-        if (sqrt(rdot) <= tol) {
-            return k;
-        }
-        /* *** compute  Ap = A*p  and set Ap to zero at dirichlet nodes */
-        CRSmatVec(Ap,A,p);
-        for(int i = 0; i < dirichletNodes.length(); i++) {
-            Ap.values( dirichletNodes(i)-1 ) = 0;
-        }
-        /* *** compute alpha = rdot/(p * Ap) */
-        alpha = rdot / dot(p, Ap);
-        /* *** update solution x  by x += alpha*p */
-        add(x,p,alpha);
-        /* *** update (local = typeII) residual by r -= alpha*Ap */
-        add(r2,Ap,-alpha);
-        /* *** get global (=type I) residual */
-        r1=r2;
-        r1.typeII_2_typeI();
-        /* *** compute  squared Norm of updated residuum rdot = r*r */
-        rdotOld = rdot;
-        rdot = dot(r1, r2);
-        beta = rdot/rdotOld;
-        /* *** update (global) direction p by p = beta*p + r1 */
-        p.values.mul(beta);
-        add(p,r1);        
-    }
-  return maxIt;    
+	
+	//Solve for x using MPI CG method under FLENS framework:
+	maxIt = cg_mpi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
+	
+  	return maxIt;    
 }
 
 /********************************************************************************************************************/
@@ -84,33 +28,8 @@ int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNod
 
 int forwardGS( CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes, int maxIt, double tol)
 {
-
-    double * Adata = A.data();
-    int * ArowPtr = A.rowPtr();
-    int * AcolIndex = A.colIndex();
-
-    Vector nodeType(x.length()); // nodeType(i)==1 => ith node is fixed!
-     // set x to zero at fixed nodes
-    for(int i = 0; i < dirichletNodes.length(); i++) {
-        x( dirichletNodes(i)-1 ) = 0;
-        nodeType( dirichletNodes(i)-1 ) = 1;    
-    }
-
-    for (int k=0; k<maxIt; k++) {
-
-        // compute Gauß-Seidel step in forward direction only at FREE NODES
-        for(int j=0;j<x.length(); j++){
-            if(nodeType(j)==0){    
-                double tmp1=0;
-                for(int mu=ArowPtr[j] ; mu<ArowPtr[j+1]; mu++){
-                    tmp1 += Adata[mu]*x( AcolIndex[mu] );
-                }
-
-                x(j) += ( b(j)-tmp1 )/A(j,j);
-            }
-        }
-
-    }
+    maxIt = gs_dense_nompi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
+        
     return maxIt;    
 }
 

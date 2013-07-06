@@ -3,6 +3,7 @@
 #include <mpi.h>
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
+#include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
 #include "functions.hpp"
 
@@ -63,17 +64,20 @@ int main(int argc, char *argv[]){
     
     /* *** create local mesh */
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
+    mesh.refineRed();
+    mesh.refineRed();
+    mesh.refineRed();
+    
     mesh.writeData(rank);
+    
     
     /* *** create fem object and assemble linear system*/
     FEM fem(mesh, f, DirichletData,NeumannData); 
     fem.assemble();
 
     fem.solve(cg);
-	fem.writeSolution();
+	fem.writeSolution(rank);
     
     MPI::Finalize();
     return 0;
 }
-
-
