@@ -5,7 +5,7 @@
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
-#include "Functions.hpp"
+#include "functions.hpp"
 
 using namespace std;
 
