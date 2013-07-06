@@ -1,5 +1,5 @@
 #include "Solver.hpp"
-
+#include <iostream>
 /********************************************************************************************************************/
 /**********************************************     CG - Method      ************************************************/
 /********************************************************************************************************************/
@@ -32,7 +32,6 @@ int CG(CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes,  int max
     p=r;
     /* *** compute  squared Norm of residuum rdot = r*r*/
     rdot = r.dot(r);
-
     for (int k=0; k<maxIt; k++) {
         /* *** abort criterion */
         if (sqrt(rdot) <= tol) {
@@ -96,10 +95,12 @@ int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNod
     /* *** initialize direction p (as typeI residual )*/
     r1=r2;
     r1.typeII_2_typeI();
+    r1.writeData();
     p=r1;
     
      /* *** compute squared Norm of residuum rdot = r*r */
     rdot = dot(r1,r2);
+    //std::cout<<rdot<<std::endl;
     for (int k=0; k<maxIt; k++) {
         /* *** abort criterion */
         if (sqrt(rdot) <= tol) {

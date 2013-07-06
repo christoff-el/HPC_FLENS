@@ -9,7 +9,7 @@
 
 #include "../Flens_supl/cg_nompi_blas.h"
 #include "../Flens_supl/gs_nompi_blas.h"
-
+#include "../Flens_supl/cg_mpi_blas.h"
 
 #include "MathOperationsMPI.hpp"
 #include "Mesh.hpp"
