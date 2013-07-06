@@ -26,8 +26,10 @@ funk2flens.o: funk2flens.cpp funk2flens.h
 	$(CC) $(CPPFLAGS)  funk2flens.cpp
 cg_nompi_blas.o: flens2funk.o funk2flens.o cg_nompi_blas.cpp cg_nompi_blas.h
 	$(CC) $(CPPFLAGS)  cg_nompi_blas.cpp
-flens_supl.a: flens2funk.o funk2flens.o cg_nompi_blas.o 
-	ar rcu libFlens.a flens2funk.o funk2flens.o cg_nompi_blas.o
+gs_nompi_blas.o: flens2funk.o funk2flens.o gs_nompi_blas.cpp gs_nompi_blas.h
+	$(CC) $(CPPFLAGS)  gs_nompi_blas.cpp
+flens_supl.a: flens2funk.o funk2flens.o cg_nompi_blas.o gs_nompi_blas.o
+	ar rcu libFlens.a flens2funk.o funk2flens.o cg_nompi_blas.o gs_nompi_blas.o
 
 clean:
 	rm *.o libFlens.a

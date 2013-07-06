@@ -1,5 +1,5 @@
-#ifndef CG_NOMPI_BLAS_H
-#define CG_NOMPI_BLAS_H 1
+#ifndef GS_NOMPI_BLAS_H
+#define GS_NOMPI_BLAS_H 1
 
 #include <flens/flens.cxx>
 #include <limits>
@@ -9,18 +9,16 @@
 #include "funk2flens.h"
 #include "flens2funk.h"
 
-
-//FLENS-based CG solver:
+//FLENS-based GS solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
-cg_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
+gs_dense_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max(),
    double tol = std::numeric_limits<double>::epsilon());
-   
 
 //Wrapper: Funken --> FLENS --> Funken
 int
-cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
+gs_dense_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
 							int maxIt, double tol);
 
-#endif	//CG_NOMPI_BLAS_H
+#endif // GS_NOMPI_BLAS_H

@@ -37,7 +37,6 @@ funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::
 
 }
 
-
 //Funken Vector --> FLENS DenseVector:
 void
 funk2flens_Vector(Vector &fk_x, flens::DenseVector<flens::Array<double> > &fl_x)
