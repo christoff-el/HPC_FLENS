@@ -1,7 +1,7 @@
 #ifndef FLENS_HEADER_H
 #define FLENS_HEADER_H
 
-
+#include "FLENSDataVector.h"
 
 #include "funk2flens.h"
 #include "flens2funk.h"

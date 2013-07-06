@@ -21,15 +21,30 @@ struct FLENSDataVector
 
 	//MPI Version (with Coupling, requires VectorType):
 	explicit
-    FLENSDataVector(int n, const Coupling &_coupling, const VectorType _vType);
+	FLENSDataVector(int n, const Coupling &_coupling, const VectorType _vType)
+    	: 	DenseVector<Array<double> >(n),
+        	vType(_vType),
+        	coupling(_coupling)
+	{
+	}
     
-    //Non-MPI version (no coupling, assumes 'nonMPI' VectorType):
-    explicit
-    FLENSDataVector(int n);
+	//Non-MPI version (no coupling, assumes 'nonMPI' VectorType):
+	explicit
+	FLENSDataVector(int n)
+    	:	DenseVector<Array<double> >(n),
+    		coupling(Coupling())
+	{
+    	vType = nonMPI;
+	}
     
-    //Copy constructor:
-    explicit
-    FLENSDataVector(const FLENSDataVector &rhs);
+	//Copy constructor:
+	explicit
+	FLENSDataVector(const FLENSDataVector &rhs)
+    	:	DenseVector<Array<double> >(rhs),		//copy data via flens framework
+    		vType(rhs.vType),
+			coupling(rhs.coupling)
+	{
+	}
     
 
 	//Member objects:

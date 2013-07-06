@@ -6,31 +6,6 @@
 
 namespace flens{
 
-explicit
-FLENSDataVector::FLENSDataVector(int n, const Coupling &_coupling, const VectorType _vType)
-    : 	DenseVector<Array<double> >(n),
-        vType(_vType),
-        coupling(_coupling)
-{
-}
-    
-//Non-MPI version (no coupling, assumes 'nonMPI' VectorType):
-explicit
-FLENSDataVector::FLENSDataVector(int n)
-    :	DenseVector<Array<double> >(n),
-    	coupling(Coupling())
-{	
-    vType = nonMPI;
-}
-    
-//Copy constructor:
-explicit
-FLENSDataVector::FLENSDataVector(const FLENSDataVector &rhs)
-    :	DenseVector<Array<double> >(rhs),		//copy data via flens framework
-    	vType(rhs.vType),
-		coupling(rhs.coupling)
-{
-}
 
 void
 FLENSDataVector::typeII_2_I()
