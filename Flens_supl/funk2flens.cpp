@@ -37,7 +37,6 @@ funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::
 
 }
 
-
 //Funken Vector --> FLENS DenseVector:
 void
 funk2flens_Vector(Vector &fk_x, flens::DenseVector<flens::Array<double> > &fl_x)
@@ -54,6 +53,24 @@ funk2flens_Vector(Vector &fk_x, flens::DenseVector<flens::Array<double> > &fl_x)
 
 }
 
+//Funken DataVector --> FLENSDataVector:
+void
+funk2flens_DataVector(DataVector &fk_x, flens::FLENSDataVector &fl_x)
+{
+	
+	assert(fl_x.length()==fk_x.values.length());
+	
+	//Add VectorType to FLENSDataVector (we must assume coupling already set, since it's const):
+	fl_x.vType = (flens::VectorType)fk_x.type;
+	
+	//Copy Funken data to FLENS data:
+	for (int i=1; i<=fl_x.length(); ++i) {
+	
+		fl_x(i) = fk_x.values(i-1);
+	
+	}
+
+}
 
 
 

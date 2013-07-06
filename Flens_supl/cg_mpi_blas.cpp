@@ -8,25 +8,23 @@
 template <typename MA, typename VX, typename VB, typename VBC>
 int
 cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
-   int    maxIterations = std::numeric_limits<int>::max(),
+   int    maxIt = std::numeric_limits<int>::max(),
    double tol = std::numeric_limits<double>::epsilon())
 {
    	using namespace flens;
 
     typedef typename VB::ElementType  	ElementType;
     typedef typename VB::IndexType    	IndexType;
-    typedef typename FLENSDataVector    VectorType;
+    typedef VB				    		VectorType;
 
 	//Initialise variables:
     ElementType  	alpha, beta, rdot, rdotOld;
-    VectorType   	Ap, p; r1, r2;	
+    VectorType   	Ap(x), p(x), r1(x), r2(b);	
     
     const ElementType  Zero(0), One(1);
     
     //r1 and r2 are the typeI and typeII vectors for the residuals
-    
-    //Copy b into r2:
-    blas::copy(b, r2);
+
     
     //Set x to 0 at dirichlet nodes (where the value is fixed):
     for(int i=0; i<bc.length(); ++i) {
@@ -50,7 +48,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     blas::copy(r1, p);
     
     //Compute squared Norm of residuals, rdot = r*r:
-    rdot = blas::dot(r, r);
+    rdot = blas::dot(r1, r2);
     
     for (int k=0; k<maxIt; k++) {
     
@@ -105,7 +103,7 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
     typedef flens::DenseVector<flens::Array<double> >		 DenseVector;
     
     //Check if sizes of matrices & vectors fit:
-    assert(fk_A.numRows()==fk_b.length() && fk_A.numCols()==fk_x.length());
+    assert(fk_A.numRows()==fk_b.values.length() && fk_A.numCols()==fk_x.values.length());
     assert(fk_x.type==typeI && fk_b.type==typeII);
     
     //Convert Funken CRSMatrix A --> FLENS CRS Matrix:
@@ -113,16 +111,18 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 	funk2flens_CRSmat(fk_A, fl_A);
 
 	//Convert Funken DataVector b --> FLENS DenseVector:
-	DenseVector fl_b(fk_b.length());
-	funk2flens_Vector(fk_b, fl_b);
+	flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
+	funk2flens_DataVector(fk_b, fl_b);
 		
-	//Solve using the FLENS-based CG solver:
+	/***Solve using the FLENS-based CG solver ***/
 	int iterCount;
-	DenseVector fl_x(fl_b.length());
-	iterCount = cg_nompi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
+	
+	//x needs no MPI functionality:
+	flens::FLENSDataVector fl_x(fl_b.length());
+	iterCount = cg_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
 
-	//Convert solution FLENS DenseVector x --> Funken Vector:
-	flens2funk_Vector(fl_x, fk_x);
+	//Convert solution FLENSDataVector x --> Funken DataVector:
+	flens2funk_DataVector(fl_x, fk_x);
 	
 	return iterCount;
     

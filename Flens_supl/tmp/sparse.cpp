@@ -12,13 +12,17 @@ struct FLENSDataVector
 	typedef double	ElementType;
     typedef int   	IndexType;
 
-	/*explicit
+	explicit
 	FLENSDataVector(int n)
-		: DenseVector<Array<double> >(n),
-		  vals(n)
-		{}*/
+		:	DenseVector<Array<double> >(n)
+		{}
+		
+	explicit
+	FLENSDataVector(FLENSDataVector &rhs)
+		: DenseVector<Array<double> >(rhs)
+		{}
 	
-	DenseVector<Array<double> > vals;
+	//DenseVector<Array<double> > vals;
     
     int sayHi(int n);
 
@@ -34,12 +38,12 @@ int main() {
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
     
-    DenseVector<Array<double> > b(5);
+    FLENSDataVector b(5);
     b(2)=99;
     
-	FLENSDataVector a;
+	FLENSDataVector a(b);
 	
-	blas::copy(b,a);
+	//blas::copy(b,a);
 	
 	cout << a << endl;
 	
