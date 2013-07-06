@@ -63,7 +63,22 @@ struct FLENSDataVector
 
 };
 
+}	//namespace flens
 
+namespace flens{ namespace blas{
+
+void 
+copy(FLENSDataVector &orig, FLENSDataVector &dest);
+
+double
+dot(FLENSDataVector &x1, FLENSDataVector &x2);
+
+void
+mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
+		FLENSDataVector &x, const double &beta, FLENSDataVector &y);
+
+
+}	//namespace blas
 }	//namespace flens
 
 

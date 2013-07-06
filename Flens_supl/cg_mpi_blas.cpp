@@ -3,6 +3,7 @@
 
 #include "cg_mpi_blas.h"
 
+#include <iostream>
 
 //FLENS-based MPI CG solver:
 template <typename MA, typename VX, typename VB, typename VBC>
@@ -26,6 +27,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     //r1 and r2 are the typeI and typeII vectors for the residuals
 
     
+    //std::cout<< "b:"<<Ap.vType<<" x:"<<x.vType
     //Set x to 0 at dirichlet nodes (where the value is fixed):
     for(int i=0; i<bc.length(); ++i) {
           x(bc(i)) = 0;
@@ -45,11 +47,12 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     /*** MPI: Initialise direction p (as typeI residual ) ***/
     blas::copy(r2, r1);
     r1.typeII_2_I();
+    //std::cout<<r1<<std::endl;
     blas::copy(r1, p);
     
     //Compute squared Norm of residuals, rdot = r*r:
     rdot = blas::dot(r1, r2);
-    
+    std::cout<<rdot<<std::endl;
     for (int k=0; k<maxIt; k++) {
     
     	/*** Abort criterion ***/
@@ -65,8 +68,8 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         }
         
         //Compute alpha = rdot/(p * Ap):
-        blas::dot(p, Ap, alpha);
-        alpha = rdot / alpha;
+        alpha = rdot; 
+        alpha /= blas::dot(p, Ap);
         
         //Update solution x by x += alpha*p:
         blas::axpy(alpha, p, x);
@@ -117,8 +120,8 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 	/***Solve using the FLENS-based CG solver ***/
 	int iterCount;
 	
-	//x needs no MPI functionality:
-	flens::FLENSDataVector fl_x(fl_b.length());
+	//x needs no MPI functionality, but we need attributes to copy to r1:
+	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
 	iterCount = cg_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
 
 	//Convert solution FLENSDataVector x --> Funken DataVector:
