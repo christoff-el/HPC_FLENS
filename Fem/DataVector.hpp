@@ -11,8 +11,8 @@
 enum vectorType { typeI, typeII, nonMPI};
 
 class DataVector {
-    public:
-        /* *** constructors ********************************************/
+public:
+    /* *** constructors ********************************************/
     DataVector(const Coupling &_coupling, const Vector &_values, 
                const vectorType _type=nonMPI);
 

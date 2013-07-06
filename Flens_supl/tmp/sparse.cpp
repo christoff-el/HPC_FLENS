@@ -66,6 +66,13 @@ int main() {
 	cout << a << endl;
 	cout << a.uhoh << endl;
 	
+	DenseVector<Array<double> > p(5);
+	p(5) = 101;
+	cout << p.length() << " " << p(5) << endl;
+	p.resize(10);
+	cout << p(5) << " " << p(6) << endl;
+	
+	
 	//cout << a.sayHi(1) << endl;
 
 	return 0;
