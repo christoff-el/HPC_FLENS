@@ -43,7 +43,7 @@ void FEM::assemble()
   	//Write values of dirichlet data:
     _updateDirichlet();
     
-    //Note: local-scope FLENS arrays have IndexBase 0:
+    //Note: local-scope FLENS vectors have IndexBase 0:
     flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > 	I(9*_mesh.numElements);
     flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > 	J(9*_mesh.numElements);
     flens::DenseVector<flens::Array<double, flens::IndexOptions<int, 0> > > val(9*_mesh.numElements);
