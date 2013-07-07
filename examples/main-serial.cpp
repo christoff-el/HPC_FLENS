@@ -25,9 +25,12 @@ int main(int argc, char *argv[]){
 	
 	/* *** create mesh */
 	Mesh mesh(coordinates, elements, dirichlet,neumann);
+	mesh.refineRed();
+	mesh.refineRed();
   
     /* *** create fem object and assemble linear system */
     FEM fem(mesh, f, DirichletData,NeumannData);
+
     fem.assemble();
   
     /* *** write Galerkin matrix */

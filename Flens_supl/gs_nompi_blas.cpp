@@ -37,17 +37,17 @@ gs_dense_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
       if (sqrt(rNormSquare)<=tol) return k-1;
 
       // Update vector
-      for (IndexType j=x.firstIndex(), i=A.firstRow(); j<=x.lastIndex(); ++j, ++i)
+      for (IndexType i=1; i<=x.lastIndex(); ++i)
       {
           // Update only free nodes
-          if (bc_node(j)==Zero)
+          if (bc_node(i)==Zero)
           {
               tmp = Zero;
-              for (IndexType lA=A.firstCol(), lx=x.firstIndex(); lA<=A.lastCol(); ++lA, ++lx)
+              for (IndexType j=1; j<=A.lastCol(); ++j)
               {
-                  tmp += A(i,lA)*x(lx);
+                  tmp += A(i,j)*x(j);
               }
-              x(j) += (b(j)-tmp)/A(i,i);
+              x(i) += (b(i)-tmp)/A(i,i);
           } 
       }
 
