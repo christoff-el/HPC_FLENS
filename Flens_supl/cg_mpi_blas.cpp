@@ -3,8 +3,6 @@
 
 #include "cg_mpi_blas.h"
 
-#include <iostream>
-
 //FLENS-based MPI CG solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
@@ -128,8 +126,6 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 	flens2funk_DataVector(fl_x, fk_x);
 	
 	return iterCount;
-    
-
 }
 
 

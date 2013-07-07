@@ -66,7 +66,6 @@ int main(int argc, char *argv[]){
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
     mesh.refineRed();
     mesh.refineRed();
-    mesh.refineRed();
     
     mesh.writeData(rank);
     
@@ -75,7 +74,7 @@ int main(int argc, char *argv[]){
     FEM fem(mesh, f, DirichletData,NeumannData); 
     fem.assemble();
 
-    fem.solve(cg);
+    fem.solve(gs);
 	fem.writeSolution(rank);
     
     MPI::Finalize();
