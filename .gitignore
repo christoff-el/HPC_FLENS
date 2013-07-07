@@ -1,0 +1,8 @@
+.DS_Store
+b.*
+*.o
+*.a
+
+examples/output/
+Original/examples/output
+
