@@ -60,7 +60,14 @@ int main() {
 	
 	flens::blas::copy(a,b);
 	
+	DenseVector<Array<double> > c(5);
+	DenseVector<Array<double> > *d = &c;
 	
+	c(4) = 67;
+	(*d)(5) = 76;
+	
+	cout << c << endl;
+	cout << *d << endl;
 	//blas::copy(b,a);
 	
 	cout << a << endl;
