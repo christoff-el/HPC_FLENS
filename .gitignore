@@ -4,3 +4,5 @@
 b.*
 /examples/output/
 /Original/examples/output
+
+examples/output/A_serial.txt
