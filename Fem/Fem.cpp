@@ -9,18 +9,22 @@
 
 /* *** constructor that works for MPI and non-MPI */
 FEM::FEM(Mesh &mesh, double (*f)(double,double), 
-         double (*DirichletData)(double,double), double (*g)(double,double)):
-        _mesh(mesh),
-         fl_uD(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
-         fl_u(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
-         fl_b(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
-         _f(f),
-         _g(g),
-         _DirichletData(DirichletData)
+        		double (*DirichletData)(double,double), double (*g)(double,double))
+        :	_mesh(mesh),
+        	fl_A(),
+	    	fl_uD(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
+         	fl_u(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
+         	fl_b(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
+         	_f(f),
+         	_g(g),
+         	_DirichletData(DirichletData)
 {
     
+    //^^^ We initialise an empty CRS matrix via an empty coordinate storage sparse matrix.
+    
     /*** Parallel version ***/
-    if (_mesh.distributed()) {    
+    if (_mesh.distributed()) {  
+
         fl_uD.vType = (flens::VectorType)typeI;
         fl_u.vType  = (flens::VectorType)typeI;
         fl_b.vType  = (flens::VectorType)typeII;
@@ -43,11 +47,10 @@ void FEM::assemble()
   	//Write values of dirichlet data:
     _updateDirichlet();
     
-    //Note: local-scope FLENS vectors have IndexBase 0:
-    flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > 	I(9*_mesh.numElements);
-    flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > 	J(9*_mesh.numElements);
-    flens::DenseVector<flens::Array<double, flens::IndexOptions<int, 0> > > val(9*_mesh.numElements);
-    double c1[2],d21[2],d31[2];
+    flens::DenseVector<flens::Array<int> > 	I(9*_mesh.numElements);
+    flens::DenseVector<flens::Array<int> > 	J(9*_mesh.numElements);
+    flens::DenseVector<flens::Array<double> > val(9*_mesh.numElements);
+    double c1[2], d21[2], d31[2];
     double area4, fval, a, b, c;
     
     for (int i=0; i<_mesh.numElements; ++i) {
@@ -71,13 +74,13 @@ void FEM::assemble()
         //Set I and J  (row and column index)
         for(int j=0; j<3; ++j) {
         
-            I(i*9+j  ) = _mesh.elements(i,j)-1;
-            I(i*9+j+3) = _mesh.elements(i,j)-1;
-            I(i*9+j+6) = _mesh.elements(i,j)-1;
+            I(i*9+j  +1) = _mesh.elements(i,j);
+            I(i*9+j+3+1) = _mesh.elements(i,j);
+            I(i*9+j+6+1) = _mesh.elements(i,j);
         
-            J(i*9+3*j  ) = _mesh.elements(i,j)-1;
-            J(i*9+3*j+1) = _mesh.elements(i,j)-1;
-            J(i*9+3*j+2) = _mesh.elements(i,j)-1;
+            J(i*9+3*j  +1) = _mesh.elements(i,j);
+            J(i*9+3*j+1+1) = _mesh.elements(i,j);
+            J(i*9+3*j+2+1) = _mesh.elements(i,j);
             
         }
         
@@ -86,15 +89,15 @@ void FEM::assemble()
         b = (d31[0]*d31[0] + d31[1]*d31[1]) / area4;
         c = (d21[0]*d21[0] + d21[1]*d21[1]) / area4;
     
-        val(i*9  ) = -2*a + b+c;
-        val(i*9+1) = a-b;
-        val(i*9+2) = a-c;
-        val(i*9+3) = a-b;
-        val(i*9+4) = b;
-        val(i*9+5) = -a;
-        val(i*9+6) = a-c;
-        val(i*9+7) = -a;
-        val(i*9+8) = c;
+        val(i*9  +1) = -2*a + b+c;
+        val(i*9+1+1) = a-b;
+        val(i*9+2+1) = a-c;
+        val(i*9+3+1) = a-b;
+        val(i*9+4+1) = b;
+        val(i*9+5+1) = -a;
+        val(i*9+6+1) = a-c;
+        val(i*9+7+1) = -a;
+        val(i*9+8+1) = c;
         
         
         /*** Assemble right-hand side ***/
@@ -109,7 +112,7 @@ void FEM::assemble()
 
     
     /*** Incorprate Neumann data ***/
-    
+
     //Compute bj += int _{Gamma_N} g(x) phi_j(x) dx:
     for(int k=0; k<_mesh.numNeumann; ++k) {
     
@@ -126,29 +129,31 @@ void FEM::assemble()
             //Evaluate Neumann data g at midpoint of neumann edge and multiply with half length:
             double gmE = length2*_g(0.5*(cn1[0]+cn2[0]) , 0.5*(cn1[1]+cn2[1]));
             fl_b( _mesh.neumann[k](j)  ) += gmE;
-            fl_b( _mesh.neumann[k](j+1)) += gmE;    
-        }    
+            fl_b( _mesh.neumann[k](j+1)) += gmE;   
+             
+        }   
+         
+    }
+
+
+    /*** Set stiffness matrix ***/
+    
+    //Build FLENS CRS matrix from I, J, vals (rows, cols, values):
+    flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(fl_uD.length(),fl_uD.length());
+    //, flens::CoordRowColCmp, flens::IndexBaseOne<int> 
+    for (int i=1; i<=I.length(); ++i) {
+    
+    	fl_A_coord(I(i),J(i)) += val(i);
+    	
     }
     
-    
-    /*** Set stiffness matrix ***/
-    //HACK to build FLENS CRS from I, J, val:
-    IndexVector _I(I.length());
-    IndexVector _J(J.length());
-    Vector 		_val(val.length());
-    
-    flens2funk_Vector(I, _I);
-    flens2funk_Vector(J, _J);
-    flens2funk_Vector(val, _val);
-    
-    CRSMatrix _A(_I,_J,_val);
-    funk2flens_CRSmat(_A, fl_A);
-    
-    
+    fl_A = fl_A_coord;
+
+
     /*** Set right-hand side vector b ***/    
-    flens::FLENSDataVector fl_Au(fl_A.numRows(), _mesh.coupling, fl_b.vType);
+    flens::FLENSDataVector fl_Au(fl_uD.length(), _mesh.coupling, fl_b.vType);
         
-        
+
     /*** Incorporate Dirichlet-Data ***/
     flens::blas::mv(flens::NoTrans, 1., fl_A, fl_uD, 0., fl_Au);
     flens::blas::axpy(-1., fl_Au, fl_b);    
@@ -180,8 +185,8 @@ void FEM::solve(Solver method)
     for (int k=0; k<_mesh.numDirichlet; ++k) { 
     
     	//Setting:
-    	for (int l=index; l<_mesh.dirichlet[k].length(); ++l) {
-    		fixedNodes(l) = _mesh.dirichlet[k](l);						//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
+    	for (int l=index; l<index+_mesh.dirichlet[k].length(); ++l) {
+    		fixedNodes(l) = _mesh.dirichlet[k](l);			//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
         }
         
         index += _mesh.dirichlet[k].length();
@@ -224,14 +229,19 @@ void FEM::solve(Solver method)
     
     //CG Solver:
     if (method == cg) {
-    
+    	
     	//Serial solver:
         if (!_mesh.distributed()) {
             it = cg_nompi_blas(fl_A ,fl_u, fl_b, fixedNodes, maxIt, tol);
         }
         
         //Parallel solver:
-        else {    
+        else { 
+        	const int rank = MPI::COMM_WORLD.Get_rank();  
+        	if(rank==0){
+        	std::cout<<fl_b<<std::endl;
+        	std::cout<<std::endl;
+        	std::cout<<fl_A<<std::endl;}
             it = cg_mpi_blas(fl_A ,fl_u, fl_b, fixedNodes,  maxIt, tol);
         }
         
@@ -250,12 +260,12 @@ void FEM::solve(Solver method)
     	
     	//Serial solver:
 		if (!_mesh.distributed()) {
-			//it = forwardGS(_A.values, _u.values, _b.values, fixedNodes, maxIt, tol);
+			it = forwardGS(fl_A, fl_u, fl_b, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			//it = forwardGS_MPI(_A, _u, _b, _mesh.coupling, fixedNodes, maxIt);
+			it = forwardGS_MPI(fl_A, fl_u, fl_b, _mesh.coupling, fixedNodes, maxIt);
 		}
 		
 	}
@@ -374,5 +384,6 @@ void FEM::_updateDirichlet()
         }
     }  
       
-}        
+}    
+
 

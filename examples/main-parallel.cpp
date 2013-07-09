@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
     Matrix coordinates;
     IndexVector elements2procs, sizes(6);
     int numCrossPoints;
-    
+
     if (rank==0) {
         /* *** only process with rank 0 loads (and sorts) mesh */
         readMeshMPI(argv[1], coordinates, elements, dirichlet, neumann, elements2procs, skeleton, numCrossPoints);
@@ -64,18 +64,21 @@ int main(int argc, char *argv[]){
     
     /* *** create local mesh */
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
-    mesh.refineRed();
-    mesh.refineRed();
-    mesh.refineRed();
-    
+   // mesh.refineRed();
+   // mesh.refineRed();
+   // mesh.refineRed();
+
     mesh.writeData(rank);
     
     
     /* *** create fem object and assemble linear system*/
-    FEM fem(mesh, f, DirichletData,NeumannData); 
-    fem.assemble();
 
+    FEM fem(mesh, f, DirichletData,NeumannData); 
+
+    fem.assemble();
+	std::cout<<"Here1:"<<std::endl;
     fem.solve(cg);
+	std::cout<<"here2"<<std::endl;
 	fem.writeSolution(rank);
     
     MPI::Finalize();
