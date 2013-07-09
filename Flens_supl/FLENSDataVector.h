@@ -4,8 +4,6 @@
 #include <mpi.h>
 #include <flens/flens.cxx>
 
-//#include "flens2c.h"
-
 #include "../Fem/Coupling.hpp"
 
 

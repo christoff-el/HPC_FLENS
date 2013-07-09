@@ -64,9 +64,9 @@ int main(int argc, char *argv[]){
     
     /* *** create local mesh */
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
-   // mesh.refineRed();
-   // mesh.refineRed();
-   // mesh.refineRed();
+    mesh.refineRed();
+   	// mesh.refineRed();
+   	// mesh.refineRed();
 
     mesh.writeData(rank);
     
@@ -76,9 +76,9 @@ int main(int argc, char *argv[]){
     FEM fem(mesh, f, DirichletData,NeumannData); 
 
     fem.assemble();
-	std::cout<<"Here1:"<<std::endl;
     fem.solve(cg);
-	std::cout<<"here2"<<std::endl;
+    //fem.solve(gs);
+    
 	fem.writeSolution(rank);
     
     MPI::Finalize();

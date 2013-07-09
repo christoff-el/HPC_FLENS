@@ -232,17 +232,12 @@ void FEM::solve(Solver method)
     	
     	//Serial solver:
         if (!_mesh.distributed()) {
-            it = cg_nompi_blas(fl_A ,fl_u, fl_b, fixedNodes, maxIt, tol);
+            it = cg_nompi_blas(fl_A ,fl_b, fl_u, fixedNodes, maxIt, tol);
         }
         
         //Parallel solver:
         else { 
-        	const int rank = MPI::COMM_WORLD.Get_rank();  
-        	if(rank==0){
-        	std::cout<<fl_b<<std::endl;
-        	std::cout<<std::endl;
-        	std::cout<<fl_A<<std::endl;}
-            it = cg_mpi_blas(fl_A ,fl_u, fl_b, fixedNodes,  maxIt, tol);
+            it = cg_mpi_blas(fl_A ,fl_b, fl_u, fixedNodes,  maxIt, tol);
         }
         
     }
@@ -250,22 +245,19 @@ void FEM::solve(Solver method)
     //GS Solver:
     else if (method == gs) {
     
-    	//HACK until GS implemented for flens:
-    	//Convert u, b back to Funken:			TURNED OFF, since requires a FLENS -> CRS converter
+    	//HACK for dense GS:
     	
-    	//DataVector _u(fl_u.coupling, fl_u.length(), fl_u.vType)
-    	//DataVector _b(fl_b.coupling, fl_b.length(), fl_b.vType);
-    	//flens2funk_DataVector(fl_u, _u);
-    	//flens2funk_DataVector(fl_b, _b);
+    	flens::GeMatrix<flens::FullStorage<double> > fl_A_dense = fl_A;
+    	
     	
     	//Serial solver:
 		if (!_mesh.distributed()) {
-			it = forwardGS(fl_A, fl_u, fl_b, fixedNodes, maxIt, tol);
+			it = gs_dense_nompi_blas(fl_A_dense, fl_b, fl_u, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			it = forwardGS_MPI(fl_A, fl_u, fl_b, _mesh.coupling, fixedNodes, maxIt);
+			it = gs_dense_mpi_blas(fl_A_dense, fl_b, fl_u, _mesh.coupling, fixedNodes, maxIt);
 		}
 		
 	}

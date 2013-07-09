@@ -3,8 +3,6 @@
 
 #include "FLENSDataVector.h"
 
-#include <iostream>
-
 namespace flens{
 
 void

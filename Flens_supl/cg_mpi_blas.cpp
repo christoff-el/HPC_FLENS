@@ -3,12 +3,11 @@
 
 #include "cg_mpi_blas.h"
 
-#include <iostream>
 
 //FLENS-based MPI CG solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
-cg_mpi_blas(const MA &A, VX &x, const VB &b, VBC &bc,
+cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIt = std::numeric_limits<int>::max(),
    double tol = std::numeric_limits<double>::epsilon())
 {
@@ -52,7 +51,7 @@ cg_mpi_blas(const MA &A, VX &x, const VB &b, VBC &bc,
     
     //Compute squared Norm of residuals, rdot = r*r:
     rdot = blas::dot(r1, r2);
-    std::cout<<rdot<<std::endl;
+
     for (int k=0; k<maxIt; k++) {
     
     	/*** Abort criterion ***/

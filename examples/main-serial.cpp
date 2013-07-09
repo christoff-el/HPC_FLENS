@@ -5,7 +5,7 @@
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
-#include "Functions.hpp"
+#include "functions.hpp"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
 	b.writeData(0,"./output/b_serial");
 	
 	/* *** solve problem using the cg method */
-    fem.solve(cg);
+    fem.solve(gs);
 	
 	fem.writeSolution();
 	
