@@ -9,6 +9,14 @@
 #include "../Fem/DataVector.hpp"
 
 
+//FLENS DenseVector --> Funken IndexVector:
+void
+flens2funk_Vector(flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > &fl_x, IndexVector &fk_x);
+
+//FLENS DenseVector_Base0 --> Funken Vector:
+void
+flens2funk_Vector(flens::DenseVector<flens::Array<double, flens::IndexOptions<int, 0> > > &fl_x, Vector &fk_x);
+
 //FLENS DenseVector --> Funken Vector:
 void
 flens2funk_Vector(flens::DenseVector<flens::Array<double> > &fl_x, Vector &fk_x);

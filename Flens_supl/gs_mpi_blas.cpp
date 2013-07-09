@@ -1,13 +1,12 @@
 #ifndef GS_MPI_BLAS_CPP
 #define GS_MPI_BLAS_CPP 1
 
-#include <mpi.h>
 #include "gs_mpi_blas.h"
-#include <iostream>
+
 using namespace std;
 
 
-//FLENS-based CG solver:
+//FLENS-based GS solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
 gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
@@ -284,9 +283,10 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
 };
    
 
-//Wrapper: Funken --> FLENS >> CG >> FLENS --> Funken
+//Wrapper: Funken --> FLENS >> GS >> FLENS --> Funken
+template <typename MA, typename VX, typename VB, typename VBC>
 int
-gs_dense_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, Coupling &coupling, IndexVector &fk_bc, 
+gs_dense_mpi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, Coupling &coupling, VBC &fk_bc, 
 						int maxIt)
 {
 	typedef int                                              IndexType;

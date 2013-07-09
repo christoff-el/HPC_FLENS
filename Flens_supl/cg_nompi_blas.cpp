@@ -74,8 +74,9 @@ cg_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
 
 //Wrapper: Funken --> FLENS --> Funken
+template <typename MA, typename VX, typename VB, typename VBC>
 int
-cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
+cg_nompi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, VBC &fk_bc,
 							int maxIt, double tol)
 {
 
@@ -97,7 +98,7 @@ cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &
 	//Solve using the FLENS-based CG solver:
 	int iterCount;
 	DenseVector fl_x(fl_b.length());
-	iterCount = cg_nompi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
+	iterCount = cg_nompi_blas(fl_A, fl_x, fl_b, fk_bc, maxIt, tol);
 
 	//Convert solution FLENS DenseVector x --> Funken Vector:
 	flens2funk_Vector(fl_x, fk_x);
