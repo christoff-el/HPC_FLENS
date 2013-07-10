@@ -4,6 +4,38 @@
 #include "flens2funk.h"
 
 
+//FLENS DenseVector --> Funken IndexVector:
+void
+flens2funk_Vector(flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > &fl_x, IndexVector &fk_x)
+{
+
+	assert(fl_x.length()==fk_x.length());
+	
+	//Copy FLENS vector to Funken vector:
+	for (int i=1; i<=fl_x.length(); ++i) {
+	
+		fk_x(i-1) = fl_x(i);
+	
+	}
+
+}
+
+//FLENS DenseVector_Base0 --> Funken Vector:
+void
+flens2funk_Vector(flens::DenseVector<flens::Array<double, flens::IndexOptions<int, 0> > > &fl_x, Vector &fk_x)
+{
+
+	assert(fl_x.length()==fk_x.length());
+	
+	//Copy FLENS vector to Funken vector:
+	for (int i=1; i<=fl_x.length(); ++i) {
+	
+		fk_x(i-1) = fl_x(i);
+	
+	}
+
+}
+
 //FLENS DenseVector --> Funken Vector:
 void
 flens2funk_Vector(flens::DenseVector<flens::Array<double> > &fl_x, Vector &fk_x)

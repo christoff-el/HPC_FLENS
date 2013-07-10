@@ -3,6 +3,7 @@
 
 #include "cg_mpi_blas.h"
 
+
 //FLENS-based MPI CG solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
@@ -19,13 +20,12 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 	//Initialise variables:
     ElementType  	alpha, beta, rdot, rdotOld;
     VectorType   	Ap(x), p(x), r1(x), r2(b);	
-    
+
     const ElementType  Zero(0), One(1);
     
     //r1 and r2 are the typeI and typeII vectors for the residuals
 
-    
-    //std::cout<< "b:"<<Ap.vType<<" x:"<<x.vType
+
     //Set x to 0 at dirichlet nodes (where the value is fixed):
     for(int i=0; i<bc.length(); ++i) {
           x(bc(i)) = 0;
@@ -34,6 +34,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     //Compute the residuals:
     //  p = A*x               ->  p is typeII
     //  r2 = b - A*x = b - p  -> r2 is typeII
+    
     blas::mv(NoTrans, One, A, x, Zero, p);
     blas::axpy(-One, p, r2);
     
@@ -50,14 +51,14 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     
     //Compute squared Norm of residuals, rdot = r*r:
     rdot = blas::dot(r1, r2);
-    std::cout<<rdot<<std::endl;
+
     for (int k=0; k<maxIt; k++) {
     
     	/*** Abort criterion ***/
         if (sqrt(rdot) <= tol) {
             return k;
         }
-        
+
         //Compute  Ap = A*p, and set Ap to zero at dirichlet nodes:
         blas::mv(NoTrans, One, A, p, Zero, Ap);
 
@@ -94,8 +95,9 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 }
 
 
+template <typename MA, typename VX, typename VB, typename VBC>
 int
-cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
+cg_mpi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, VBC &fk_bc, 
 						int maxIt, double tol)
 {
     
@@ -120,7 +122,7 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 	
 	//x needs no MPI functionality, but we need attributes to copy to r1:
 	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
-	iterCount = cg_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
+	iterCount = cg_mpi_blas(fl_A, fl_x, fl_b, fk_bc, maxIt, tol);
 
 	//Convert solution FLENSDataVector x --> Funken DataVector:
 	flens2funk_DataVector(fl_x, fk_x);

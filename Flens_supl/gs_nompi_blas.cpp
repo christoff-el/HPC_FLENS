@@ -3,14 +3,19 @@
 
 #include "gs_nompi_blas.h"
 
+<<<<<<< HEAD
 //FLENS-based dense GS solver:
+=======
+
+//FLENS-based GS solver:
+>>>>>>> chris
 template <typename MA, typename VX, typename VB, typename VBC>
 int
 gs_dense_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max(),
    double tol = std::numeric_limits<double>::epsilon())
 {
-  using namespace flens;
+	using namespace flens;
 
 	typedef typename VB::ElementType  ElementType;
   typedef typename VB::IndexType    IndexType;
@@ -145,8 +150,13 @@ gs_nompi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
 
 //Wrapper: Funken --> FLENS --> Funken
+template <typename MA, typename VX, typename VB, typename VBC>
 int
+<<<<<<< HEAD
 gs_dense_nompi_blas_wrapper(Matrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
+=======
+gs_dense_nompi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, VBC &fk_bc,
+>>>>>>> chris
 							int maxIt, double tol)
 {
   typedef int                                          IndexType;
