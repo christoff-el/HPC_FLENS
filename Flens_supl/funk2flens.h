@@ -12,6 +12,10 @@
 void
 funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1>> > &fl_A);
 
+//Funken Matrix --> FLENS GeMatrix:
+void
+funk2flens_mat(Matrix &fk_A, flens::GeMatrix<flens::FullStorage<double> > &fl_A);
+
 //Funken Vector --> FLENS DenseVector:
 void
 funk2flens_Vector(Vector &fk_x, flens::DenseVector<flens::Array<double> > &fl_x);

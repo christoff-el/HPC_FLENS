@@ -179,7 +179,7 @@ void FEM::solve(Solver method)
 		if(!_mesh.distributed()){
 			it = forwardGS( _A, _u.values, _b.values, fixedNodes, maxIt, tol);
 		}else{
-			it = forwardGS_MPI(_A, _u, _b, _mesh.coupling, fixedNodes, maxIt);
+			it = forwardGS_MPI(_A, _u, _b, fixedNodes, maxIt);
 		}
 		
 	}

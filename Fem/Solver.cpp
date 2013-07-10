@@ -28,16 +28,16 @@ int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNod
 
 int forwardGS( CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes, int maxIt, double tol)
 {
-    maxIt = gs_dense_nompi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
+    maxIt = gs_nompi_blas_wrapper(A, x, b, dirichletNodes, maxIt, tol);
         
     return maxIt;    
 }
 
-int forwardGS_MPI( CRSMatrix &A, DataVector &x, DataVector &b, Coupling &coupling, 
+int forwardGS_MPI( CRSMatrix &A, DataVector &x, DataVector &b, 
                    IndexVector &dirichletNodes, int maxIt)
 {
 
-    maxIt = gs_dense_mpi_blas_wrapper(A, x, b, coupling, dirichletNodes, maxIt);
+    maxIt = gs_mpi_blas_wrapper(A, x, b, dirichletNodes, maxIt);
         
     return maxIt;
 }
