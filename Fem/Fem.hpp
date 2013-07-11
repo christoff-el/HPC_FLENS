@@ -5,14 +5,13 @@
 #include <vector>
 #include <math.h>
 
-//#include "../LinearAlgebra/LinAlgHeader.hpp"
-#include "../LinearAlgebra/CRSMatrix.hpp"
-#include "../Flens_supl/FlensHeader.h"
-//#include "MathOperationsMPI.hpp"
-#include "Mesh.hpp"
-#include "DataVector.hpp"
 
-//using namespace flens;
+#include "../Flens_supl/FlensHeader.h"
+
+#include "Mesh.hpp"
+
+#include "../LinearAlgebra/CRSMatrix.hpp"
+#include "DataVector.hpp"
 
 
 // flags for solving SLE

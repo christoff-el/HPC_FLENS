@@ -5,11 +5,12 @@
 
 namespace flens{
 
+
 void
-FLENSDataVector::typeII_2_I()
+FLENSDataVector<FlvTypeII>::typeII_2_I()
 {
 
-	assert(vType==typeII);
+	//assert(vType==typeII);
 	
 	//Sum up values at cross points:
 	commCrossPoints();
@@ -23,10 +24,10 @@ FLENSDataVector::typeII_2_I()
 }
 
 void
-FLENSDataVector::typeI_2_II()
+FLENSDataVector<FlvTypeI>::typeI_2_II()
 {
 
-	assert(vType == typeI);
+	//assert(vType == typeI);
 	
 	//Divide values at cross points by the number of processes:
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
@@ -45,8 +46,9 @@ FLENSDataVector::typeI_2_II()
 
 }
 
+template <typename VTYPE>
 void
-FLENSDataVector::commCrossPoints()
+FLENSDataVector<VTYPE>::commCrossPoints()
 {
 	
 	FLENSDataVector u_crossPoints(coupling.numCrossPoints);
@@ -74,9 +76,9 @@ FLENSDataVector::commCrossPoints()
 
 }
 
-
+template <typename VTYPE>
 void 
-FLENSDataVector::commBoundaryNodes()
+FLENSDataVector<VTYPE>::commBoundaryNodes()
 {
 
 	for (int i=1; i<=coupling.maxColor; ++i) {
@@ -117,8 +119,9 @@ FLENSDataVector::commBoundaryNodes()
 
 }
 
+template <typename VTYPE>
 double*
-FLENSDataVector::vec2c()
+FLENSDataVector<VTYPE>::vec2c()
 {
 
 	double *cVec = new double[(*this).length()];
@@ -139,8 +142,9 @@ FLENSDataVector::vec2c()
 namespace flens{ namespace blas{
 
 //Overloaded copy, so that vector type data also added:
+template <typename VTYPE>
 void
-copy(FLENSDataVector &orig, FLENSDataVector &dest) 
+copy(FLENSDataVector<VTYPE> &orig, FLENSDataVector<VTYPE> &dest) 
 {
 	
 	//Create pointers that upcast FLENSDataVector to Parent DenseVector:
@@ -158,7 +162,7 @@ copy(FLENSDataVector &orig, FLENSDataVector &dest)
 
 //Overloaded dot, for communication:
 double
-dot(FLENSDataVector &x1, FLENSDataVector &x2)
+dot(FLENSDataVector<FlvTypeI> &x1, FLENSDataVector<FlvTypeII> &x2)
 {
 
 	//Upcast to DenseVector, and use the standard blas::dot:
@@ -190,7 +194,7 @@ dot(FLENSDataVector &x1, FLENSDataVector &x2)
 //Overloaded mv, for type updating:
 void
 mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector &x, const double &beta, FLENSDataVector &y) {
+		FLENSDataVector<FlvTypeI> &x, const double &beta, FLENSDataVector<FlvTypeII> &y) {
 	
 	//Make sure we have the right vector type x:
 	assert(x.vType==nonMPI || x.vType==typeI);

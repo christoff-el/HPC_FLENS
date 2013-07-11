@@ -5,7 +5,11 @@
 using namespace flens;
 using namespace std;
 
+class FLvNonMPI{};
+class FLvTypeI{};
+class FLvTypeII{};
 
+template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
@@ -15,7 +19,8 @@ struct FLENSDataVector
 	explicit
 	FLENSDataVector(int n)
 		:	DenseVector<Array<double> >(n)
-		{}
+		{
+		cout<<"hi"<<endl;}
 		
 	explicit
 	FLENSDataVector(FLENSDataVector &rhs)
@@ -37,7 +42,7 @@ struct FLENSDataVector
 
 namespace flens {namespace blas {
 void
-copy(FLENSDataVector &a, FLENSDataVector &b){
+copyer(FLENSDataVector<FLvTypeI> &a, FLENSDataVector<FLvTypeI> &b){
 cout<<"Hahaha"<<endl;
 
 //DenseVector<Array<double> > *tmpa = &a;
@@ -52,7 +57,17 @@ int main() {
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
     
-    FLENSDataVector b(5);
+    FLENSDataVector<> a(5);
+    a(1)=99;
+    FLENSDataVector<FLvTypeI> b(5);
+    b(2)=101;
+    flens::blas::copyer(a,b);
+    
+    cout<<a<<endl;
+    cout<<b<<endl;
+    
+    
+    /*FLENSDataVector b(5);
     b(2)=99;
     b(3)=1;
     
@@ -85,7 +100,7 @@ int main() {
 	p(5) = 101;
 	cout << p.length() << " " << p(5) << endl;
 	p.resize(10);
-	cout << p(5) << " " << p(6) << endl;
+	cout << p(5) << " " << p(6) << endl;*/
 	
 	
 	//cout << a.sayHi(1) << endl;

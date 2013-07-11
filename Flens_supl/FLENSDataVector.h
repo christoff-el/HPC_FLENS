@@ -11,6 +11,11 @@ namespace flens{
 
 enum VectorType {typeI, typeII, nonMPI};
 
+class FLvNonMPI{};
+class FLvTypeI{};
+class FLvTypeII{};
+
+template <typename VTYPE>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
@@ -65,15 +70,18 @@ struct FLENSDataVector
 
 namespace flens{ namespace blas{
 
+template <typename VTYPE>
 void 
-copy(FLENSDataVector &orig, FLENSDataVector &dest);
+copy(FLENSDataVector<VTYPE> &orig, FLENSDataVector<VTYPE> &dest);
 
+template <typename VTYPE>
 double
-dot(FLENSDataVector &x1, FLENSDataVector &x2);
+dot(FLENSDataVector<FlvTypeI> &x1, FLENSDataVectorFlvTypeII> &x2);
 
+template <typename VTYPE>
 void
 mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector &x, const double &beta, FLENSDataVector &y);
+		FLENSDataVector &x<FlvTypeI>, const double &beta, FLENSDataVector &y<FlvTypeII>);
 
 
 }	//namespace blas

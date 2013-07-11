@@ -15,11 +15,13 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
     typedef typename VB::ElementType  	ElementType;
     typedef typename VB::IndexType    	IndexType;
-    typedef VB				    		VectorType;
+    typedef VX							VectorTypeI;
+    typedef VB				    		VectorTypeII; 
 
 	//Initialise variables:
     ElementType  	alpha, beta, rdot, rdotOld;
-    VectorType   	Ap(x), p(x), r1(x), r2(b);	
+    VectorTypeI   	Ap(x), r1(x);
+    VectorTypeII	p(b),  r2(b);	
 
     const ElementType  Zero(0), One(1);
     
@@ -46,7 +48,6 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     /*** MPI: Initialise direction p (as typeI residual ) ***/
     blas::copy(r2, r1);
     r1.typeII_2_I();
-    //std::cout<<r1<<std::endl;
     blas::copy(r1, p);
     
     //Compute squared Norm of residuals, rdot = r*r:
