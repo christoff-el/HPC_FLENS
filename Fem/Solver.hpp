@@ -7,7 +7,7 @@
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 
-#include "../Flens_supl/cg_nompi_blas.h"
+#include "../Flens_supl/FlensHeader.h"
 #include "../Flens_supl/gs_nompi_blas.h"
 #include "../Flens_supl/cg_mpi_blas.h"
 #include "../Flens_supl/gs_mpi_blas.h"

@@ -5,7 +5,7 @@
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
-#include "Functions.hpp"
+#include "functions.hpp"
 
 using namespace std;
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]){
     /* *** create local mesh */
     Mesh mesh(coordinates, elements, dirichlet,neumann, elements2procs, skeleton, numCrossPoints);
     mesh.refineRed();
-   	// mesh.refineRed();
+   	mesh.refineRed();
    	// mesh.refineRed();
 
     mesh.writeData(rank);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
     FEM fem(mesh, f, DirichletData,NeumannData); 
 
     fem.assemble();
-    fem.solve(cg);
+    fem.solve(gs);
     //fem.solve(gs);
     
 	fem.writeSolution(rank);

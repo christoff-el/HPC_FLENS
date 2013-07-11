@@ -1,5 +1,8 @@
 OS = $(shell uname -s)
 
+LDFLAGS  := -L../Flens_supl
+LDLIBS	 := -lFlens
+
 .PHONY: all clean
 
 ifeq ($(OS),Darwin)
@@ -29,8 +32,8 @@ Mesh.o:  Coupling.o Mesh.cpp Mesh.hpp
 	$(CC) $(CPPFLAGS)  Mesh.cpp
 Solver.o:  Mesh.o MathOperationsMPI.o DataVector.o Solver.cpp Solver.hpp 
 	$(CC) $(CPPFLAGS)  Solver.cpp
-Fem.o: Mesh.o DataVector.o Solver.o Fem.cpp Fem.hpp 
-	$(CC) $(CPPFLAGS)  Fem.cpp
+Fem.o: Mesh.o DataVector.o Solver.o Fem.cpp Fem.hpp
+	$(CC) $(CPPFLAGS) Fem.cpp
 
 
 libFem.a:Coupling.o DataVector.o MathOperationsMPI.o Mesh.o Solver.o Fem.o

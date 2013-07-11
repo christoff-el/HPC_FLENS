@@ -34,9 +34,9 @@ int main(int argc, char *argv[]){
     fem.assemble();
   
     /* *** write Galerkin matrix */
-    CRSMatrix A = fem.getA();
-    A.writeFull("./output/A_serial.txt");
-	
+    //CRSMatrix A = fem.getA(); <------------- Segmentation Fault!!!
+    //A.writeFull("./output/A_serial.txt");
+
 	DataVector b = fem.getb();
 	b.writeData(0,"./output/b_serial");
 	

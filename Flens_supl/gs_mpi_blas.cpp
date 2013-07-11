@@ -2,16 +2,8 @@
 #define GS_MPI_BLAS_CPP 1
 
 #include "gs_mpi_blas.h"
-<<<<<<< HEAD
 
 //FLENS-based dense GS solver:
-=======
-
-using namespace std;
-
-
-//FLENS-based GS solver:
->>>>>>> chris
 template <typename MA, typename VX, typename VB, typename VBC>
 int
 gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
@@ -70,7 +62,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     }
     
     // set innerNodes for fixed Nodes (Dirichlet nodes)
-    for(int k=0; k<bc.length(); ++k)
+    for(int k=1; k<=bc.length(); ++k)
     {
         innerNodes(bc(k)) = 1;
     }
@@ -171,7 +163,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     // initialize residual 
     FLENSDataVector r(numNodes, coupling, flens::nonMPI);
     // set x to zero at fixed nodes
-    for(int i=0; i<bc.length(); ++i) {
+    for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
     }
 
@@ -352,7 +344,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     }
     
     // set innerNodes for fixed Nodes (Dirichlet nodes)
-    for(int k=0; k<bc.length(); ++k)
+    for(int k=1; k<=bc.length(); ++k)
     {
         innerNodes(bc(k)) = 1;
     }
@@ -478,7 +470,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     // initialize residual 
     FLENSDataVector r(numNodes, coupling, flens::nonMPI);
     // set x to zero at fixed nodes
-    for(int i=0; i<bc.length(); ++i) {
+    for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
     }
 
@@ -598,80 +590,6 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     return maxIterations;
 };
    
-
-//Wrapper: Funken --> FLENS >> GS >> FLENS --> Funken
-template <typename MA, typename VX, typename VB, typename VBC>
-int
-<<<<<<< HEAD
-gs_dense_mpi_blas_wrapper(Matrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
-=======
-gs_dense_mpi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, Coupling &coupling, VBC &fk_bc, 
->>>>>>> chris
-						int maxIt)
-{
-	typedef int                                              IndexType;
-    typedef flens::IndexOptions<IndexType, 1>         		 IndexBase;
-    typedef flens::DenseVector<flens::Array<double> >		 DenseVector;
-    
-    //Check if sizes of matrices & vectors fit:
-    assert(fk_A.numRows()==fk_b.values.length() && fk_A.numCols()==fk_x.values.length());
-    assert(fk_x.type==typeI && fk_b.type==typeII);
-    
-    //Convert Funken Matrix A --> FLENS GeMatrix:
-	flens::GeMatrix<flens::FullStorage<double> > fl_A(fk_A.numRows(),fk_A.numCols());
-	funk2flens_mat(fk_A, fl_A);
-
-	//Convert Funken DataVector b --> FLENS DenseVector:
-	flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
-	funk2flens_DataVector(fk_b, fl_b);
-		
-	/***Solve using the FLENS-based GS solver ***/
-	int iterCount;
-	
-	//Convert Funken DataVector x --> FLENS DenseVector:
-	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
-	iterCount = gs_dense_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt);
-
-	//Convert solution FLENSDataVector x --> Funken DataVector:
-	flens2funk_DataVector(fl_x, fk_x);
-	
-	return iterCount;
-};
-
-//Wrapper: Funken --> FLENS >> CG >> FLENS --> Funken
-int
-gs_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
-                        int maxIt)
-{
-    typedef int                                              IndexType;
-    typedef flens::IndexOptions<IndexType, 1>                IndexBase;
-    typedef flens::DenseVector<flens::Array<double> >        DenseVector;
-    
-    //Check if sizes of matrices & vectors fit:
-    assert(fk_A.numRows()==fk_b.values.length() && fk_A.numCols()==fk_x.values.length());
-    assert(fk_x.type==typeI && fk_b.type==typeII);
-    
-    //Convert Funken CRSMatrix A --> FLENS CRS Matrix:
-    flens::GeCRSMatrix<flens::CRS<double, IndexBase> > fl_A;
-    funk2flens_CRSmat(fk_A, fl_A);
-
-    //Convert Funken DataVector b --> FLENS DenseVector:
-    flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
-    funk2flens_DataVector(fk_b, fl_b);
-        
-    /***Solve using the FLENS-based GS solver ***/
-    int iterCount;
-    
-    //Convert Funken DataVector x --> FLENS DenseVector:
-    flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
-    iterCount = gs_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt);
-
-    //Convert solution FLENSDataVector x --> Funken DataVector:
-    flens2funk_DataVector(fl_x, fk_x);
-    
-    return iterCount;
-};
-
 
 template <typename V>
 void

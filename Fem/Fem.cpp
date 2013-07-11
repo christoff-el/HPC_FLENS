@@ -180,13 +180,13 @@ void FEM::solve(Solver method)
     }
     
     //Set fixedNodes:
-    flens::DenseVector<flens::Array<int, flens::IndexOptions<int, 0> > > fixedNodes(numfixed);		//!!Base 0
-    int index=0;
+    flens::DenseVector<flens::Array<int> > fixedNodes(numfixed);
+    int index=1;
     for (int k=0; k<_mesh.numDirichlet; ++k) { 
     
     	//Setting:
     	for (int l=index; l<index+_mesh.dirichlet[k].length(); ++l) {
-    		fixedNodes(l) = _mesh.dirichlet[k](l);			//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
+    		fixedNodes(l) = _mesh.dirichlet[k](l-1);			//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
         }
         
         index += _mesh.dirichlet[k].length();
@@ -241,31 +241,19 @@ void FEM::solve(Solver method)
         }
         
     }
-<<<<<<< HEAD
-    else if (method == gs){
-		if(!_mesh.distributed()){
-			it = forwardGS( _A, _u.values, _b.values, fixedNodes, maxIt, tol);
-		}else{
-			it = forwardGS_MPI(_A, _u, _b, fixedNodes, maxIt);
-=======
     
     //GS Solver:
     else if (method == gs) {
-    
-    	//HACK for dense GS:
-    	
-    	flens::GeMatrix<flens::FullStorage<double> > fl_A_dense = fl_A;
     	
     	
     	//Serial solver:
 		if (!_mesh.distributed()) {
-			it = gs_dense_nompi_blas(fl_A_dense, fl_b, fl_u, fixedNodes, maxIt, tol);
+			it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			it = gs_dense_mpi_blas(fl_A_dense, fl_b, fl_u, _mesh.coupling, fixedNodes, maxIt);
->>>>>>> chris
+			it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
 		}
 		
 	}

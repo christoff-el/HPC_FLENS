@@ -5,6 +5,7 @@
 
 #include "funk2flens.h"
 #include "flens2funk.h"
+#include "wrappers.h"
 #include "cg_nompi_blas.h"
 #include "cg_mpi_blas.h"
 #include "gs_nompi_blas.h"
