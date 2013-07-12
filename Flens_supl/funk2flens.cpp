@@ -8,13 +8,12 @@
 void
 funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1>> > &fl_A)
 {
+	int n = fk_A.numRows();
+	int m = fk_A.numCols();
 
 	typedef int                                              				IndexType;
     typedef flens::IndexOptions<IndexType, 1>                				IndexBase;
     typedef flens::CoordStorage<double, flens::CoordRowColCmp, IndexBase>  	Coord;
-
-	int n = fk_A.numRows();
-	int m = fk_A.numCols();
 	
 	//FLENS CRS must be built from a Coordinate storage matrix:
     flens::GeCoordMatrix<Coord>  fl_A_coord(n, m);
@@ -36,6 +35,26 @@ funk2flens_CRSmat(CRSMatrix &fk_A, flens::GeCRSMatrix<flens::CRS<double, flens::
 	fl_A = fl_A_coord;
 
 }
+
+//Funken Matrix --> FLENS GeMatrix:
+void
+funk2flens_mat(Matrix &fk_A, flens::GeMatrix<flens::FullStorage<double> > &fl_A)
+{
+	int n_lhs = fk_A.numRows(), m_lhs = fk_A.numCols();
+	int n_rhs = fl_A.numRows(), m_rhs = fl_A.numCols();
+
+	assert(n_lhs==n_rhs && m_lhs==m_rhs);
+
+	// Copy Funken to FLENS
+	for (int i=1; i<=n_rhs; ++i)
+	{
+		for (int j=1; j<=m_rhs; ++j)
+		{
+			fl_A(i,j) = fk_A(i-1,j-1);
+		}
+	}
+};
+
 
 //Funken Vector --> FLENS DenseVector:
 void

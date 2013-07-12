@@ -3,13 +3,10 @@
 
 #include "gs_mpi_blas.h"
 
-using namespace std;
-
-
-//FLENS-based GS solver:
+//FLENS-based dense GS solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
-gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
+gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max())
 {
 	using namespace flens;
@@ -18,6 +15,8 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
     typedef typename VB::IndexType    		IndexType;
     typedef VB				    			VectorType;
     typedef DenseVector<Array<IndexType> >	IVector;
+
+    const Coupling &coupling = b.coupling;
 
   	// GS_MPI starts here
   	// First resort indices
@@ -63,7 +62,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
     }
     
     // set innerNodes for fixed Nodes (Dirichlet nodes)
-    for(int k=0; k<bc.length(); ++k)
+    for(int k=1; k<=bc.length(); ++k)
     {
         innerNodes(bc(k)) = 1;
     }
@@ -121,6 +120,8 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
                     assert(numBdryNodes<=sendIndex.length());
 					memcpy(sendIndex.data(), coupling.boundaryNodes[j].data()+1,
 														numBdryNodes*sizeof(int));
+
+                  //  typename IVector::View  sendIndex(numBdryNodes, coupling.boundaryNodes[j].data()+1); 
                     
                     VectorType u_send1(numBdryNodes-1);
                     VectorType u_recv1(numBdryNodes-1);
@@ -162,7 +163,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
     // initialize residual 
     FLENSDataVector r(numNodes, coupling, flens::nonMPI);
     // set x to zero at fixed nodes
-    for(int i=0; i<bc.length(); ++i) {
+    for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
     }
 
@@ -281,53 +282,314 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, Coupling &coupling, VBC &bc,
     
     return maxIterations;
 };
-   
 
-//Wrapper: Funken --> FLENS >> GS >> FLENS --> Funken
+
+//FLENS-based sparse GS solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
-gs_dense_mpi_blas_wrapper(MA &fk_A, VX &fk_x, VB &fk_b, Coupling &coupling, VBC &fk_bc, 
-						int maxIt)
+gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
+   int    maxIterations = std::numeric_limits<int>::max())
 {
-	typedef int                                              IndexType;
-    typedef flens::IndexOptions<IndexType, 1>         		 IndexBase;
-    typedef flens::DenseVector<flens::Array<double> >		 DenseVector;
+    using namespace flens;
+
+    typedef typename VB::ElementType        ElementType;
+    typedef typename VB::IndexType          IndexType;
+    typedef VB                              VectorType;
+    typedef DenseVector<Array<IndexType> >  IVector;
+
+    ElementType Zero(0);
+    const Coupling &coupling = b.coupling;
+
+    // GS_MPI starts here
+    // First resort indices
+    IndexType numNodes=x.length();
     
-    //Check if sizes of matrices & vectors fit:
-    assert(fk_A.numRows()==fk_b.values.length() && fk_A.numCols()==fk_x.values.length());
-    assert(fk_x.type==typeI && fk_b.type==typeII);
+    /* Step 0.1:
+     *    Build index vectors for 
+     *      - cross points (indexV), 
+     *      - boundary nodes (indexE),
+     *      - inner nodes (indexI) 
+     */
     
+    // cross point are listed first
+    int nV=coupling.local2globalCrossPoints.length();
+    IVector indexV(nV);
+    for(IndexType k=1; k<=nV; ++k)
+    {
+        indexV(k) = k;
+    }
+    
+    // build innerNodes with innerNodes(k)==0 => k-th node  is an inner node 
+    IVector innerNodes(numNodes);
+    for(IndexType k=1; k<=nV; ++k)
+    {
+         innerNodes(k) = 1;
+    }
+    IndexType nE=0, counter=1;
+    
+    // count number of boundary nodes
+    for(int k=0; k<coupling.numCoupling; ++k)
+    {
+         nE += coupling.boundaryNodes[k].length()-2;
+    }
+    IVector indexE(nE);
+    for(int k=0; k<coupling.numCoupling; ++k)
+    { 
+        for(int j=1; j<coupling.boundaryNodes[k].length()-1; ++j)
+        {
+            indexE(counter) =  coupling.boundaryNodes[k](j);
+            innerNodes(coupling.boundaryNodes[k](j)) = 1;
+            counter ++;
+        }
+    }
+    
+    // set innerNodes for fixed Nodes (Dirichlet nodes)
+    for(int k=1; k<=bc.length(); ++k)
+    {
+        innerNodes(bc(k)) = 1;
+    }
+    // count inner nodes
+    IndexType nI=0;
+    for(IndexType j=nV+1; j<=numNodes; ++j)
+    {
+        if(innerNodes(j)==0) ++nI;
+    }
 
+        
+    IVector indexI(nI);
+    counter=1;
+    for(IndexType j=nV+1; j<=numNodes; ++j)
+    {
+        if(innerNodes(j)==0)
+        {
+            indexI(counter) = j;
+            counter++;
+        }
+    }
+    
+    /* Step 0.2:
+     *    Set diagonal block matrices A_VV and A_EE 
+     *    of matrix A
+     *      - first local values
+     *      - communication to get global values
+     */
+    
+    // set local values for A_EE and A_VV
+    FLENSDataVector diag(numNodes, coupling, flens::typeII);
+    VectorType subdiag(nE);
+    IndexType idxk;
 
+    // Access values of A
+    const auto &_rows = A.engine().rows();
+    const auto &_cols = A.engine().cols();
+    const auto &_vals = A.engine().values();
 
-    //##### This part has to be changed for dense matrices!!!!!!!!!!!!!!!!
-    //Convert Funken CRSMatrix A --> FLENS CRS Matrix:
-	flens::GeCRSMatrix<flens::CRS<double, IndexBase> > fl_A;
-	funk2flens_CRSmat(fk_A, fl_A);
+    ElementType Akk = Zero;
+    // set values at diagonal
+    for(IndexType k=1; k<=numNodes; ++k)
+    {
+        // Locate value
+        for (IndexType j=_rows(k); j<_rows(k+1); ++j)
+        {
+            if (_cols(j)==k)
+            {
+                Akk = _vals(j);
+            }
+        }
+        assert(Akk!=Zero);
+        diag(k) = Akk;
+    }
 
-	// Densify
-  	flens::GeMatrix<flens::FullStorage<double> > Fl_A = fl_A;
-  	//##### This part has to be changed for dense matrices!!!!!!!!!!!!!!!!
+    // Now global values: 
+    // a) communication for diagonal 
+    diag.typeII_2_I();
+    // b) communication for subdiagonal
+    int offset=0;
+    for (int j=0; j<coupling.numCoupling; ++j)
+    {
+        for (int i=1; i<=coupling.maxColor; ++i)
+        {
+            if (coupling.colors(j) == i){
+                IndexType numBdryNodes = coupling.boundaryNodes[j].length()-2;
+                // only communicate if there are more than 1 boundary nodes on coupling boundary (no cross Points!)
+                if(numBdryNodes>1){
+                    IVector sendIndex(numBdryNodes);
 
+                    assert(numBdryNodes<=sendIndex.length());
+                    memcpy(sendIndex.data(), coupling.boundaryNodes[j].data()+1,
+                                                        numBdryNodes*sizeof(int));
 
+                    //typename IVector::ConstView  sendIndex(numBdryNodes, coupling.boundaryNodes[j].data()+1); 
+                    
+                    VectorType u_send1(numBdryNodes-1);
+                    VectorType u_recv1(numBdryNodes-1);
+                    // set local values
+                    for(IndexType k=1; k<=numBdryNodes-1; ++k)
+                    {
+                        Akk = Zero;
+                        // Locate value
+                        for (IndexType it=_rows(sendIndex(k+1)); it<_rows(sendIndex(k+1)+1); ++it)
+                        {
+                            if (_cols(it)==sendIndex(k))
+                            {
+                                Akk = _vals(it);
+                            }
+                        }
+                        u_send1(k) =  Akk;
+                    }
+                    // get values from other processes
+                    MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
+                                   coupling.neighbourProcs(j)-1, 0,
+                                   u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
+                                   coupling.neighbourProcs(j)-1, 0);
+                    // add values from other processes (!! numbering is opposite !!)
+                    for(IndexType k=1; k<=numBdryNodes-1; ++k)
+                    {
+                        subdiag(k+offset) =  u_send1(k) + u_recv1(numBdryNodes-k);
+                    }
+                }
+                offset+=numBdryNodes;
+            }
+        }
+    }    
+    // extract matrices A_VV and  A_EE
+    VectorType A_VV(nV), A_EE_diag(nE), A_EE_udiag(nE), A_EE_ldiag(nE);
+    for(IndexType k=1; k<=nV; ++k)
+    {
+        A_VV(k) = diag(k);
+    }
+    for(IndexType k=1; k<=nE; ++k)
+    {
+        idxk=indexE(k);
+        A_EE_diag(k) = diag(idxk);
+    }
+    /* 
+     * Start iteration  
+     */
+     
+    // initialize residual 
+    FLENSDataVector r(numNodes, coupling, flens::nonMPI);
+    // set x to zero at fixed nodes
+    for(int i=1; i<=bc.length(); ++i) {
+          x(bc(i)) = 0;
+    }
 
+    // set bdryNodes vector as we only solve at free nodes! 
+    IVector bdryNodes(numNodes-nI);
+    for(IndexType k=1; k<=nV; ++k) bdryNodes(k) = k;
+    counter=nV+1;
+    for(IndexType k=nV+1; k<=numNodes; ++k)
+    {
+        if(innerNodes(k)!=0)
+        { 
+            bdryNodes(counter) = k;
+            ++counter;
+        }
+    }
 
-	//Convert Funken DataVector b --> FLENS DenseVector:
-	flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
-	funk2flens_DataVector(fk_b, fl_b);
-		
-	/***Solve using the FLENS-based GS solver ***/
-	int iterCount;
-	
-	//Convert Funken DataVector x --> FLENS DenseVector:
-	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
-	iterCount = gs_dense_mpi_blas(Fl_A, fl_b, fl_x, coupling, fk_bc, maxIt);
+    for(int ell=1; ell<=maxIterations; ++ell)
+    {
+        
+        /* Step 1.1:
+         *    Calculate residual on crosspoints
+         *    r_V = b_V - A_VV*x_V - A_VE*x_E - A_VI * x_I
+         */
+        for(IndexType k=1; k<=nV; ++k)
+        {
+            if(coupling.crossPointsBdryData(k-1)==0)
+            {
+                ElementType tmp2=0;
+                for(IndexType j=_rows(k); j<_rows(k+1); ++j)
+                { 
+                    tmp2 += _vals(j)*x(_cols(j));
+                }    
+                r(k) =  b(k) - tmp2;
+            }        
+        }
+        /* Step 1.2:
+         *    Communicate with other proceses
+         *    to compute typeI residual (w_V),
+         *    saved in r as well
+         */
+        r.commCrossPoints();
+        
+        /* Step 1.3:
+         *    Update x at cross points 
+         */
+        for(IndexType k=1; k<=nV; ++k)
+        {
+            x(k) += r(k)/diag(k);
+        }  
+        /* Step 2.1:
+         *    Calculate residual on boundary nodes 
+         *    r_E = b_E - A_EV*x_V - A_EE*x_E - A_EI * x_I
+         */
+        for(IndexType k=1; k<=nE; ++k)
+        {
+            IndexType idx = indexE(k);
+            ElementType tmp2=0;
+            for(IndexType j=_rows(idx); j<_rows(idx+1); ++j)
+            {
+                tmp2 += _vals(j)*x(_cols(j));
+            }    
+            r(idx) = b(idx) - tmp2;    
+        }
+        
+        /* Step 2.2:
+         *    Communicate with other proceses
+         *    to compute typeI residual (w_E),
+         *    saved in r as well
+         */
+        r.commBoundaryNodes();
+        
+        /* Step 2.3:
+         *    Update x at boundary nodes:
+         *      - compute A_EE^-1*rE
+         *      - update x
+         */
+          
+        // Computation of A_EE^-1*rE:
+        VectorType xE(nE), rE(nE);
+        //  a) copy subdiagonals (as they are changed in solveTridiag)
 
-	//Convert solution FLENSDataVector x --> Funken DataVector:
-	flens2funk_DataVector(fl_x, fk_x);
-	
-	return iterCount;
+        memcpy(A_EE_ldiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
+        memcpy(A_EE_udiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
+
+        //  b) set right hand side
+        for(IndexType k=1; k<=nE; ++k)
+        {
+             rE(k) =  r(indexE(k));
+        }
+        //  c) invoke tridiagonal solver
+        solveTridiag(A_EE_ldiag, A_EE_diag, A_EE_udiag,xE,rE);
+        
+        // Update x at boundary nodes
+        for(IndexType k=1; k<=nE; ++k)
+        { 
+            x(indexE(k)) += xE(k);    
+        }
+        /* Step 3:
+         *    Calculate x on inner nodes: 
+         *    Gauß-Seidel step in forward direction (only at FREE NODES)
+         */
+        for(IndexType j=1; j<=numNodes; ++j)
+        {
+            if(innerNodes(j)==0)
+            {    
+                ElementType tmp1=0;
+                for(IndexType mu=_rows(j); mu<_rows(j+1); ++mu)
+                {
+                    tmp1 += _vals(mu)*x(_cols(mu));
+                }
+        
+                x(j) += (b(j)-tmp1)/diag(j);
+            }
+        }
+    }
+    
+    return maxIterations;
 };
+   
 
 template <typename V>
 void

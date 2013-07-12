@@ -7,7 +7,7 @@
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 
-#include "../Flens_supl/cg_nompi_blas.h"
+#include "../Flens_supl/FlensHeader.h"
 #include "../Flens_supl/gs_nompi_blas.h"
 #include "../Flens_supl/cg_mpi_blas.h"
 #include "../Flens_supl/gs_mpi_blas.h"
@@ -25,7 +25,7 @@ int CG_MPI(CRSMatrix &A, DataVector &x, DataVector &b, IndexVector &dirichletNod
 /* *** Gauß-Seidel-methods **************************************************************************************/
 int forwardGS( CRSMatrix &A, Vector &x, Vector &b, IndexVector &dirichletNodes, int maxIt, double tol);
 
-int forwardGS_MPI( CRSMatrix &A, DataVector &x, DataVector &b,Coupling &coupling,
+int forwardGS_MPI( CRSMatrix &A, DataVector &x, DataVector &b,
                    IndexVector &dirichletNodes, int maxIt);
 			
 void solveTridiag(Vector &ldiag, Vector &diag, Vector &udiag, Vector &x, Vector &b);

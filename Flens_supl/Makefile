@@ -28,16 +28,18 @@ flens2funk.o: FLENSDataVector.o flens2funk.cpp flens2funk.h
 funk2flens.o: FLENSDataVector.o funk2flens.cpp funk2flens.h
 	$(CC) $(CPPFLAGS)  funk2flens.cpp
 
-cg_nompi_blas.o: flens2funk.o funk2flens.o cg_nompi_blas.cpp cg_nompi_blas.h
+cg_nompi_blas.o: cg_nompi_blas.cpp cg_nompi_blas.h
 	$(CC) $(CPPFLAGS)  cg_nompi_blas.cpp
-gs_nompi_blas.o: flens2funk.o funk2flens.o gs_nompi_blas.cpp gs_nompi_blas.h
+gs_nompi_blas.o: gs_nompi_blas.cpp gs_nompi_blas.h
 	$(CC) $(CPPFLAGS)  gs_nompi_blas.cpp
-cg_mpi_blas.o: FLENSDataVector.o flens2funk.o funk2flens.o cg_mpi_blas.cpp cg_mpi_blas.h
+cg_mpi_blas.o: cg_mpi_blas.cpp cg_mpi_blas.h
 	$(CC) $(CPPFLAGS)  cg_mpi_blas.cpp
-gs_mpi_blas.o: FLENSDataVector.o flens2funk.o funk2flens.o gs_mpi_blas.cpp gs_mpi_blas.h
+gs_mpi_blas.o: gs_mpi_blas.cpp gs_mpi_blas.h
 	$(CC) $(CPPFLAGS)  gs_mpi_blas.cpp
-flens_supl.a: FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o
-	ar rcu libFlens.a FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o
+wrappers.o: FLENSDataVector.o funk2flens.o flens2funk.o gs_mpi_blas.o gs_nompi_blas.o cg_mpi_blas.o cg_nompi_blas.o wrappers.cpp wrappers.h
+	$(CC) $(CPPFLAGS)  wrappers.cpp
+flens_supl.a: FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o wrappers.o
+	ar rcu libFlens.a FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o wrappers.o
 
 clean:
 	rm *.o libFlens.a

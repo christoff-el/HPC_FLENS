@@ -8,7 +8,7 @@
 #include <string.h>
 #include <memory>
 
-#include <LinearAlgebra/Vector.hpp>
+#include "Vector.hpp"
 //#include <LinearAlgebra/DataVector.hpp>
 
 #define MIN(a,b) ((a)>(b)?(b):(a))
