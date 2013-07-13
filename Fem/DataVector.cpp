@@ -46,11 +46,11 @@ void DataVector::typeI_2_typeII()
 
     /* *** divide values at cross points by number of processes */
   for( int k=0; k<coupling.local2globalCrossPoints.length(); k++) {
-      values(k) /= coupling.crossPointsNumProcs(k);
+      values(k) /= coupling.crossPointsNumProcs(k+1);
   }
   /* *** divide values at boundary nodes by 2 (2=number of processes...), don't divide for cross points! */
-  for (int i=0; i<coupling.numCoupling; i++ ) {
-      for (int j=1; j<coupling.boundaryNodes[i].length()-1; j++) {            
+  for (int i=1; i<=coupling.numCoupling; i++ ) {
+      for (int j=2; j<=coupling.boundaryNodes[i].length()-1; j++) {            
                 values(coupling.boundaryNodes[i](j)-1) /=2.;
       }
   }
@@ -66,14 +66,14 @@ void DataVector::communicationCrossPoints()
    Vector u_crossPoints(coupling.numCrossPoints); 
     /* *** local values at all global cross points */
    for (int i=0; i<coupling.local2globalCrossPoints.length(); i++) {
-       u_crossPoints( coupling.local2globalCrossPoints(i)-1) = values(i);
+       u_crossPoints( coupling.local2globalCrossPoints(i+1)-1) = values(i);
    }
      Vector u_crossPoints_gl(coupling.numCrossPoints);
    MPI::COMM_WORLD.Allreduce(u_crossPoints.data(), u_crossPoints_gl.data(),
                              coupling.numCrossPoints, MPI::DOUBLE,MPI::SUM);
 
    for (int i=0 ; i<coupling.local2globalCrossPoints.length(); i++) {
-       values(i) = u_crossPoints_gl(coupling.local2globalCrossPoints(i)-1);
+       values(i) = u_crossPoints_gl(coupling.local2globalCrossPoints(i+1)-1);
    }
     
 }
@@ -83,7 +83,7 @@ void DataVector::communicationBoundaryNodes()
     
     /* *** MPI Communication for coupling boundaries (no cross points!) */    
   for (int i=1; i<=coupling.maxColor; i++) {
-       for (int j=0; j<coupling.numCoupling; j++) {
+       for (int j=1; j<=coupling.numCoupling; j++) {
            if (coupling.colors(j) == i && coupling.boundaryNodes[j].length()-2 >0) {
                 // only communicate if there is a boundary node on coupling boundary (no cross Points!)
                 int sendLength = coupling.boundaryNodes[j].length()-2;

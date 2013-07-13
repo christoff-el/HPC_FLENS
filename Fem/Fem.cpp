@@ -2,7 +2,6 @@
 
 #include "Solver.hpp"
 
-
 /************************************************************************************************************/
 /************************************    constructor   ******************************************************/
 /************************************************************************************************************/
@@ -175,7 +174,7 @@ void FEM::solve(Solver method)
         numfixed += _mesh.dirichlet[k].length();
     } 
     
-    for (int k=0; k<_mesh.coupling.crossPointsBdryData.length(); ++k) {
+    for (int k=1; k<=_mesh.coupling.crossPointsBdryData.length(); ++k) {
         if(_mesh.coupling.crossPointsBdryData(k)!=0) numfixed++;        
     }
     
@@ -193,11 +192,11 @@ void FEM::solve(Solver method)
         
     }
     
-    for (int k=0; k<_mesh.coupling.crossPointsBdryData.length(); ++k) {
+    for (int k=1; k<=_mesh.coupling.crossPointsBdryData.length(); ++k) {
     
         if (_mesh.coupling.crossPointsBdryData(k) != 0) {
         
-            fixedNodes(index) = k+1;
+            fixedNodes(index) = k;
             index++;
             
         }
@@ -265,7 +264,7 @@ void FEM::solve(Solver method)
         exit(1);
         
     }    
-
+    
 	//Only rank 0 (or serial implementation) output required iterations:
     if (!_mesh.distributed() || MPI::COMM_WORLD.Get_rank()==0) {
     
@@ -361,7 +360,7 @@ void FEM::_updateDirichlet()
     
     for (int i=0; i<_mesh.coupling.crossPointsBdryData.length(); ++i) {
     
-        if (_mesh.coupling.crossPointsBdryData(i)!=0) {
+        if (_mesh.coupling.crossPointsBdryData(i+1)!=0) {
         
             //Set Dirichlet data on nodes:
       		fl_uD(i+1) = _DirichletData(_mesh.coordinates(i,0), _mesh.coordinates(i,1));

@@ -20,7 +20,7 @@ class IndexVector{
 		/* *** getter and setter mehtods ***********************************/
 		int length() const;
 		int* data() const;
-		void set(int index, int num, int* val);
+		void set(int index, int num, const int* val);
 		void   init(int val);
 		/* *** operators  *************************************************/
 		IndexVector & operator=(const IndexVector &rhs);

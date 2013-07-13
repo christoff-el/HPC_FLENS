@@ -46,7 +46,7 @@ int IndexVector::length() const{
 	return _length;
 }
 
-void IndexVector::set(int index,int num,int* val)
+void IndexVector::set(int index,int num,const int* val)
 {	
 	assert(index+num<=_length && index>=0);
 	memcpy(_data+index,val, num*sizeof(int) );
