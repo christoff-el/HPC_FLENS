@@ -3,6 +3,7 @@
 
 #include "gs_mpi_blas.h"
 
+
 //FLENS-based dense GS solver:
 template <typename MA, typename VX, typename VB, typename VBC>
 int
@@ -15,6 +16,8 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     typedef typename VB::IndexType    		IndexType;
     typedef VB				    			VectorType;
     typedef DenseVector<Array<IndexType> >	IVector;
+
+    const Underscore<IndexType> _; // FLENS operator (range access)
 
     const Coupling &coupling = b.coupling;
 
@@ -53,7 +56,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     IVector indexE(nE);
     for(int k=0; k<coupling.numCoupling; ++k)
     { 
-        for(int j=1; j<coupling.boundaryNodes[k].length()-1; ++j)
+        for(int j=2; j<=coupling.boundaryNodes[k].length()-1; ++j)
         {
             indexE(counter) =  coupling.boundaryNodes[k](j);
             innerNodes(coupling.boundaryNodes[k](j)) = 1;
@@ -111,18 +114,13 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
         for (int i=1; i<=coupling.maxColor; ++i)
         {
-            if (coupling.colors(j) == i){
+            if (coupling.colors(j+1) == i){
                 IndexType numBdryNodes = coupling.boundaryNodes[j].length()-2;
                 // only communicate if there are more than 1 boundary nodes on coupling boundary (no cross Points!)
                 if(numBdryNodes>1){
-                    IVector sendIndex(numBdryNodes);
-
-                    assert(numBdryNodes<=sendIndex.length());
-					memcpy(sendIndex.data(), coupling.boundaryNodes[j].data()+1,
-														numBdryNodes*sizeof(int));
-
-                  //  typename IVector::View  sendIndex(numBdryNodes, coupling.boundaryNodes[j].data()+1); 
-                    
+  
+                    IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
+                  
                     VectorType u_send1(numBdryNodes-1);
                     VectorType u_recv1(numBdryNodes-1);
                     // set local values
@@ -132,9 +130,9 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                     }
                     // get values from other processes
                     MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j)-1, 0,
+                                   coupling.neighbourProcs(j+1)-1, 0,
                                    u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j)-1, 0);
+                                   coupling.neighbourProcs(j+1)-1, 0);
                     // add values from other processes (!! numbering is opposite !!)
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
@@ -189,7 +187,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          */
         for(IndexType k=1; k<=nV; ++k)
         {
-            if(coupling.crossPointsBdryData(k-1)==0)
+            if(coupling.crossPointsBdryData(k)==0)
             {
                 ElementType tmp2=0;
                 for(IndexType j=1; j<=A.lastCol(); ++j)
@@ -245,8 +243,8 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         VectorType xE(nE), rE(nE);
         //  a) copy subdiagonals (as they are changed in solveTridiag)
 
-		memcpy(A_EE_ldiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
-		memcpy(A_EE_udiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
+		A_EE_ldiag(_(1,nE-1)) = subdiag(_(1,nE-1));
+        A_EE_udiag(_(1,nE-1)) = subdiag(_(1,nE-1));
 
         //  b) set right hand side
         for(IndexType k=1; k<=nE; ++k)
@@ -292,10 +290,12 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 {
     using namespace flens;
 
-    typedef typename VB::ElementType        ElementType;
-    typedef typename VB::IndexType          IndexType;
-    typedef VB                              VectorType;
-    typedef DenseVector<Array<IndexType> >  IVector;
+    typedef typename VB::ElementType                ElementType;
+    typedef typename VB::IndexType                  IndexType;
+    typedef VB                                      VectorType;
+    typedef DenseVector<Array<IndexType> >          IVector;
+
+    const Underscore<IndexType> _; // FLENS operator (range access)
 
     ElementType Zero(0);
     const Coupling &coupling = b.coupling;
@@ -335,14 +335,14 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     IVector indexE(nE);
     for(int k=0; k<coupling.numCoupling; ++k)
     { 
-        for(int j=1; j<coupling.boundaryNodes[k].length()-1; ++j)
+        for(int j=2; j<=coupling.boundaryNodes[k].length()-1; ++j)
         {
             indexE(counter) =  coupling.boundaryNodes[k](j);
             innerNodes(coupling.boundaryNodes[k](j)) = 1;
             counter ++;
         }
     }
-    
+
     // set innerNodes for fixed Nodes (Dirichlet nodes)
     for(int k=1; k<=bc.length(); ++k)
     {
@@ -400,6 +400,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         diag(k) = Akk;
     }
 
+
     // Now global values: 
     // a) communication for diagonal 
     diag.typeII_2_I();
@@ -409,17 +410,12 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
         for (int i=1; i<=coupling.maxColor; ++i)
         {
-            if (coupling.colors(j) == i){
+            if (coupling.colors(j+1) == i){
                 IndexType numBdryNodes = coupling.boundaryNodes[j].length()-2;
                 // only communicate if there are more than 1 boundary nodes on coupling boundary (no cross Points!)
                 if(numBdryNodes>1){
-                    IVector sendIndex(numBdryNodes);
-
-                    assert(numBdryNodes<=sendIndex.length());
-                    memcpy(sendIndex.data(), coupling.boundaryNodes[j].data()+1,
-                                                        numBdryNodes*sizeof(int));
-
-                    //typename IVector::ConstView  sendIndex(numBdryNodes, coupling.boundaryNodes[j].data()+1); 
+                    
+                    IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
                     
                     VectorType u_send1(numBdryNodes-1);
                     VectorType u_recv1(numBdryNodes-1);
@@ -439,9 +435,9 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                     }
                     // get values from other processes
                     MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j)-1, 0,
+                                   coupling.neighbourProcs(j+1)-1, 0,
                                    u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j)-1, 0);
+                                   coupling.neighbourProcs(j+1)-1, 0);
                     // add values from other processes (!! numbering is opposite !!)
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
@@ -496,7 +492,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          */
         for(IndexType k=1; k<=nV; ++k)
         {
-            if(coupling.crossPointsBdryData(k-1)==0)
+            if(coupling.crossPointsBdryData(k)==0)
             {
                 ElementType tmp2=0;
                 for(IndexType j=_rows(k); j<_rows(k+1); ++j)
@@ -552,8 +548,8 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         VectorType xE(nE), rE(nE);
         //  a) copy subdiagonals (as they are changed in solveTridiag)
 
-        memcpy(A_EE_ldiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
-        memcpy(A_EE_udiag.data(), subdiag.data(), (nE-1)*sizeof(ElementType));
+        A_EE_ldiag(_(1,nE-1)) = subdiag(_(1,nE-1));
+        A_EE_udiag(_(1,nE-1)) = subdiag(_(1,nE-1));
 
         //  b) set right hand side
         for(IndexType k=1; k<=nE; ++k)

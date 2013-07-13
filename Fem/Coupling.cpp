@@ -6,9 +6,9 @@ Coupling::Coupling() : neighbourProcs(), boundaryNodes(), coupling2edges(), loca
 
 }
 
-Coupling::Coupling( IndexVector _neighbourProcs, std::vector<IndexVector> _boundaryNodes, std::vector<IndexVector> _coupling2edges,
-          					IndexVector _local2globalCrossPoints, IndexVector _crossPointsBdryData, IndexVector _crossPointsNumProcs, 
-										IndexVector _colors, int _maxColor, int _numCoupling, int _numCrossPoints):
+Coupling::Coupling( IVector _neighbourProcs, std::vector<IVector> _boundaryNodes, std::vector<IVector> _coupling2edges,
+          					IVector _local2globalCrossPoints, IVector _crossPointsBdryData, IVector _crossPointsNumProcs, 
+										IVector _colors, int _maxColor, int _numCoupling, int _numCrossPoints):
 										neighbourProcs(_neighbourProcs), boundaryNodes(_boundaryNodes), coupling2edges(_coupling2edges), 
 										local2globalCrossPoints(_local2globalCrossPoints), crossPointsBdryData(_crossPointsBdryData),
 										crossPointsNumProcs(_crossPointsNumProcs), colors(_colors), maxColor(_maxColor), numCoupling(_numCoupling),

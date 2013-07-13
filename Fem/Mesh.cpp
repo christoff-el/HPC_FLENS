@@ -222,6 +222,12 @@ void Mesh::provideGeometricData()
 
 void Mesh::provideGeometricDataMPI()
 {
+    //--- Typedefs for FLENS
+    // Used to set values from a C-Array
+    typedef flens::DenseVector<flens::Array<int>::View> VecView;
+    typedef flens::Array<int>::View View;
+    //--- Typedefs for FLENS
+
     int nE = numElements;
     int nD = 0;
     if(numDirichlet>0) for(int k=0;k<numDirichlet;k++) nD += dirichlet[k].length()-1;
@@ -343,7 +349,7 @@ void Mesh::provideGeometricDataMPI()
         for(int k=0;k<coupling.numCoupling;k++){
             int size = coupling.boundaryNodes[k].length()-1;
             coupling.coupling2edges[k].resize(size);
-            coupling.coupling2edges[k].set(0, size,edgeNumber.data()+3*nE+nD+nN+index);
+            coupling.coupling2edges[k] = VecView(View(size,edgeNumber.data()+3*nE+nD+nN+index));
             index+=size;
         }
     }
@@ -489,11 +495,11 @@ void Mesh::refineRed()
           int j; 
           coupling.boundaryNodes[k].resize(2*oldCoupling.boundaryNodes[k].length()-1); 
           for (j=0; j<oldCoupling.boundaryNodes[k].length()-1; j++){
-        coupling.boundaryNodes[k](2*j)    =  oldCoupling.boundaryNodes[k](j);
-          coupling.boundaryNodes[k](2*j+1)  =  coupling.coupling2edges[k](j)+numNodes;
+        coupling.boundaryNodes[k](2*j+1)    =  oldCoupling.boundaryNodes[k](j+1);
+          coupling.boundaryNodes[k](2*j+2)  =  coupling.coupling2edges[k](j+1)+numNodes;
       }
-          coupling.boundaryNodes[k]( coupling.boundaryNodes[k].length()-1 ) = 
-            oldCoupling.boundaryNodes[k]( oldCoupling.boundaryNodes[k].length()-1 );                                                            
+          coupling.boundaryNodes[k]( coupling.boundaryNodes[k].length() ) = 
+            oldCoupling.boundaryNodes[k]( oldCoupling.boundaryNodes[k].length() );                                                            
     }
   }
 
@@ -614,11 +620,11 @@ void Mesh::_distributeMesh(const Matrix &coordinates_gl, const IndexMatrix &elem
     // here, we use the fact that cross points are listed first in local indexing
     for(int j=0;j<dirichlet_gl.numRows(); j++){
             if( dirichlet_gl(j,0) <= numCrossPoints_gl && global2local( dirichlet_gl(j,0)-1 ) != 0 ){ 
-                coupling.crossPointsBdryData( global2local( dirichlet_gl(j,0)-1 )-1) = 1;
+                coupling.crossPointsBdryData( global2local( dirichlet_gl(j,0)-1 )) = 1;
             }    
                 
             if( dirichlet_gl(j,1) <= numCrossPoints_gl && global2local( dirichlet_gl(j,1)-1 ) != 0 ){
-                coupling.crossPointsBdryData( global2local( dirichlet_gl(j,1)-1 )-1) = 1;    
+                coupling.crossPointsBdryData( global2local( dirichlet_gl(j,1)-1 )) = 1;    
             }    
     }
     
@@ -641,7 +647,7 @@ void Mesh::_distributeMesh(const Matrix &coordinates_gl, const IndexMatrix &elem
             if (skeleton_loc(k,0)!=0 && skeleton_loc(k,0) <= numCrossPoints_loc){
                 ptr(0) = k+1;
                 //set local2globalCrossPoints
-                coupling.local2globalCrossPoints( skeleton_loc(k,0)-1 ) = skeleton(k,0);
+                coupling.local2globalCrossPoints( skeleton_loc(k,0) ) = skeleton(k,0);
                 break;
             }
         }
@@ -650,38 +656,38 @@ void Mesh::_distributeMesh(const Matrix &coordinates_gl, const IndexMatrix &elem
             if (skeleton_loc( ptr(k-1)-1,1 ) <= numCrossPoints_loc){ // we reached the next crosspoint! 
                 numBoundaryNodes=k+1;
                 //set local2globalCrossPoints, if it is not already set
-                if( coupling.local2globalCrossPoints( skeleton_loc( ptr(k-1)-1,1 )-1 ) == 0 )
-                      coupling.local2globalCrossPoints( skeleton_loc( ptr(k-1)-1,1 )-1 ) =  skeleton( ptr(k-1)-1,1 );
+                if( coupling.local2globalCrossPoints( skeleton_loc( ptr(k-1)-1,1 ) ) == 0 )
+                      coupling.local2globalCrossPoints( skeleton_loc( ptr(k-1)-1,1 ) ) =  skeleton( ptr(k-1)-1,1 );
                 
                 break;
             }
             ptr(k) = node2Skeleton( skeleton_loc( ptr(k-1)-1,1 )-1);
         }
         // set color    
-        coupling.colors(index) = skeleton_loc( ptr(0)-1,4 );
+        coupling.colors(index+1) = skeleton_loc( ptr(0)-1,4 );
         if ( skeleton_loc(ptr(0)-1,2)==(rank+1) ){    // skeleton elements are ordered counter clockwise    
             // set neighbourProcs
-            coupling.neighbourProcs(index) = skeleton_loc( ptr(0)-1,3);
+            coupling.neighbourProcs(index+1) = skeleton_loc( ptr(0)-1,3);
             //set boundary nodes ( and delete skeleton)
             coupling.boundaryNodes[index].resize(numBoundaryNodes);
             
             for(int k=0;k<numBoundaryNodes-1;k++){
-                coupling.boundaryNodes[index](k) = skeleton_loc( ptr(k)-1,0);
+                coupling.boundaryNodes[index](k+1) = skeleton_loc( ptr(k)-1,0);
                 if(k==numBoundaryNodes-2) 
-                    coupling.boundaryNodes[index](k+1) = skeleton_loc( ptr(k)-1,1);
+                    coupling.boundaryNodes[index](k+2) = skeleton_loc( ptr(k)-1,1);
                 //set skeleton to zero
                 skeleton_loc( ptr(k)-1, 0) = 0;
                 skeleton_loc( ptr(k)-1, 1) = 0;
             }            
         }    else if ( skeleton_loc(ptr(0)-1,3)==(rank+1) ){  // skeleton elements are ordered clockwise => switch    
             // set neighbourProcs
-            coupling.neighbourProcs(index) = skeleton_loc( ptr(0)-1,2 );
+            coupling.neighbourProcs(index+1) = skeleton_loc( ptr(0)-1,2 );
             // set boundary nodes ( and delete skeleton)
             coupling.boundaryNodes[index].resize(numBoundaryNodes);
             for(int k=0;k<numBoundaryNodes-1;k++){ 
-                coupling.boundaryNodes[index](k) = skeleton_loc( ptr(numBoundaryNodes-k-2)-1,1 );
+                coupling.boundaryNodes[index](k+1) = skeleton_loc( ptr(numBoundaryNodes-k-2)-1,1 );
                 if(k==numBoundaryNodes-2)
-                    coupling.boundaryNodes[index](k+1) = skeleton_loc( ptr(0)-1,0 );
+                    coupling.boundaryNodes[index](k+2) = skeleton_loc( ptr(0)-1,0 );
                 //set skeleton to zero
                 skeleton_loc( ptr(numBoundaryNodes-k-2)-1, 0) = 0;
                 skeleton_loc( ptr(numBoundaryNodes-k-2)-1, 1) = 0;
@@ -747,17 +753,22 @@ void Mesh::_distributeMesh(const Matrix &coordinates_gl, const IndexMatrix &elem
     
     
     /* *** build maxColor ***********************************************/
-    int maxColorLoc = coupling.colors.max();
+    int maxColorLoc = 0;
+    for (int i=1; i<=coupling.colors.length(); ++i)
+    {
+        if(coupling.colors(i)>maxColorLoc) maxColorLoc=coupling.colors(i);
+    }
+
     MPI::COMM_WORLD.Allreduce(&maxColorLoc, &coupling.maxColor, 1, MPI::INT, MPI::MAX);
     /* *** build coupling_loc.crossPointsNumProcs **********************************************************/
-    for (int j=0 ; j<numCrossPoints_loc; j++) {
+    for (int j=1 ; j<=numCrossPoints_loc; j++) {
           for (int k=0; k<skeleton.numRows(); k++) {
               if (skeleton(k,0) == coupling.local2globalCrossPoints(j) ||
                   skeleton(k,1) == coupling.local2globalCrossPoints(j) )
                             coupling.crossPointsNumProcs(j) +=1;
           }
       }
-    for (int j=0 ; j<numCrossPoints_loc; j++)
+    for (int j=1 ; j<=numCrossPoints_loc; j++)
         if(coupling.crossPointsNumProcs(j)==1)
             coupling.crossPointsNumProcs(j) = 2;
 

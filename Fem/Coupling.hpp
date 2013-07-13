@@ -1,30 +1,30 @@
 #ifndef COUPLING_H_
 #define COUPLING_H_
 
+#include <flens/flens.cxx>
 #include <vector>
 
-#include "../LinearAlgebra/LinAlgHeader.hpp"
-
+typedef flens::DenseVector<flens::Array<int> > IVector;
 
 class Coupling{
 public:
 	/* *** public Variables */
-	IndexVector neighbourProcs;
-	std::vector<IndexVector> boundaryNodes;
-	std::vector<IndexVector> coupling2edges;
-	IndexVector local2globalCrossPoints;
-	IndexVector crossPointsBdryData;
-	IndexVector crossPointsNumProcs;
-	IndexVector colors;
+	IVector neighbourProcs;
+	std::vector<IVector> boundaryNodes;
+	std::vector<IVector> coupling2edges;
+	IVector local2globalCrossPoints;
+	IVector crossPointsBdryData;
+	IVector crossPointsNumProcs;
+	IVector colors;
 	
 	int maxColor, numCoupling, numCrossPoints;
 	
 	/* *** constructors */
 	Coupling();
 
-  Coupling( IndexVector _neighbourProcs, std::vector<IndexVector> _boundaryNodes, std::vector<IndexVector> _coupling2edges,
-            IndexVector _local2globalCrossPoints, IndexVector _crossPointsBdryData, IndexVector _crossPointsNumProcs, 
-						IndexVector _colors, int _maxColor, int _numCoupling, int _numCrossPoints);
+  Coupling( IVector _neighbourProcs, std::vector<IVector> _boundaryNodes, std::vector<IVector> _coupling2edges,
+            IVector _local2globalCrossPoints, IVector _crossPointsBdryData, IVector _crossPointsNumProcs, 
+						IVector _colors, int _maxColor, int _numCoupling, int _numCrossPoints);
 
   Coupling(const Coupling & rhs);
 	~Coupling();

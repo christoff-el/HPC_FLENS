@@ -77,7 +77,6 @@ int main(int argc, char *argv[]){
 
     fem.assemble();
     fem.solve(gs);
-    //fem.solve(gs);
     
 	fem.writeSolution(rank);
     
