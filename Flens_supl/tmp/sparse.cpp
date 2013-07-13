@@ -5,9 +5,15 @@
 using namespace flens;
 using namespace std;
 
-class FLvNonMPI{};
-class FLvTypeI{};
-class FLvTypeII{};
+class FLvNonMPI{
+public:
+	static const bool check;};
+class FLvTypeI;
+class FLvTypeII{
+public:
+	static const bool check;
+};
+
 
 template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector
@@ -16,11 +22,10 @@ struct FLENSDataVector
 	typedef double	ElementType;
     typedef int   	IndexType;
 
-	explicit
-	FLENSDataVector(int n)
-		:	DenseVector<Array<double> >(n)
-		{
-		cout<<"hi"<<endl;}
+
+
+
+	FLENSDataVector(int n,FLENSDataVector<>* m);	
 		
 	explicit
 	FLENSDataVector(FLENSDataVector &rhs)
@@ -30,19 +35,31 @@ struct FLENSDataVector
 	//DenseVector<Array<double> > vals;
     int uhoh=1;
     
-    	
-    
-    
-    
 
 
 };
 
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n, FLENSDataVector<>*)
+	:	DenseVector<Array<double> >(n)
+{
+	cout<<"default"<<endl;
+}
 
+template<>
+FLENSDataVector<FLvTypeI>::FLENSDataVector(int n, FLENSDataVector<>* m)
+	:	DenseVector<Array<double> >(n)
+{
+	cout<<"special"<<endl;
+	//if (m==NULL){
+	//cerr<<"No coupling"<<endl;exit(1);}
+	//int j=m->uhoh;
+	//assert(m != NULL);
+	}
 
 namespace flens {namespace blas {
 void
-copyer(FLENSDataVector<FLvTypeI> &a, FLENSDataVector<FLvTypeI> &b){
+copyer(FLENSDataVector<FLvTypeI> &a, FLENSDataVector<FLvTypeII> &b){
 cout<<"Hahaha"<<endl;
 
 //DenseVector<Array<double> > *tmpa = &a;
@@ -56,10 +73,11 @@ int main() {
 	typedef int                                              IndexType;
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
-    
-    FLENSDataVector<> a(5);
+    int t=1;
+    FLENSDataVector<>* i;
+    FLENSDataVector<FLvTypeI> a(5,i);
     a(1)=99;
-    FLENSDataVector<FLvTypeI> b(5);
+    FLENSDataVector<FLvTypeII> b(5,i);
     b(2)=101;
     flens::blas::copyer(a,b);
     

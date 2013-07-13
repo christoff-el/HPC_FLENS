@@ -6,8 +6,52 @@
 namespace flens{
 
 
+//Non-MPI --> Restricted to only FLnonMPI specialisation.
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n)
+{
+	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
+						//		e.g. if FLENSDataVector<double> instantiated.
+}
+
+template <>
+FLENSDataVector<FLvNonMPI>::FLENSDataVector(int n)
+	: 	DenseVector<Array<double> >(n),
+		coupling(NULL)
+{
+	//Permits instatiation of FlNonMPI specialisation.
+}
+
+
+//MPI --> Restricted to only FLvTypeI, FLvTypeII specialisations.
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n, const Coupling &_coupling)
+{
+	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
+						//		e.g. if FLENSDataVector<double> instantiated.
+}
+
+template <>
+FLENSDataVector<FLvTypeI>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	DenseVector<Array<double> >(n),
+		coupling(_coupling)
+{
+	//Permits instatiation of FlvTypeI specialisation.
+}
+
+template <>
+FLENSDataVector<FLvTypeII>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	DenseVector<Array<double> >(n),
+		coupling(_coupling)
+{
+	//Permits instatiation of FlvTypeII specialisation.
+}
+	
+	
+
+template <>	
 void
-FLENSDataVector<FlvTypeII>::typeII_2_I()
+FLENSDataVector<FLvTypeI>::typeII_2_I()
 {
 
 	//assert(vType==typeII);
@@ -19,10 +63,11 @@ FLENSDataVector<FlvTypeII>::typeII_2_I()
 	commBoundaryNodes();
 	
 	//Update VectorType:
-	vType = typeI;
+	//vType = typeI;
 
 }
 
+template <>
 void
 FLENSDataVector<FlvTypeI>::typeI_2_II()
 {
@@ -141,28 +186,29 @@ FLENSDataVector<VTYPE>::vec2c()
 
 namespace flens{ namespace blas{
 
-//Overloaded copy, so that vector type data also added:
-template <typename VTYPE>
+//Overloaded copy, so that when copying typeII->I, we also apply the appropriate type conversion:
 void
-copy(FLENSDataVector<VTYPE> &orig, FLENSDataVector<VTYPE> &dest) 
+copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
 	
 	//Create pointers that upcast FLENSDataVector to Parent DenseVector:
-	DenseVector<Array<double> > *tmpOrig = &orig;
-	DenseVector<Array<double> > *tmpDest = &dest;
+	//DenseVector<Array<double> > *tmpOrig = &orig;
+	//DenseVector<Array<double> > *tmpDest = &dest;
 	
 	//Copy data as usual (masquerading as a DenseVector :) ):
-	blas::copy(*tmpOrig, *tmpDest);
+	//blas::copy(*tmpOrig, *tmpDest);
+	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig), *static_cast<DenseVector<Array<double> > *>(&dest));
 
 	//Transfer vector type:
-	dest.vType = orig.vType;
+	//dest.vType = orig.vType;
+	dest.typeII_2_I();
 
 	//(coupling can't be transferred)
 }
 
-//Overloaded dot, for communication:
+//Overloaded dot - performs appropriate communication:
 double
-dot(FLENSDataVector<FlvTypeI> &x1, FLENSDataVector<FlvTypeII> &x2)
+dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 {
 
 	//Upcast to DenseVector, and use the standard blas::dot:
@@ -191,7 +237,7 @@ dot(FLENSDataVector<FlvTypeI> &x1, FLENSDataVector<FlvTypeII> &x2)
 
 }
 
-//Overloaded mv, for type updating:
+/*//Overloaded mv, for type updating:
 void
 mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
 		FLENSDataVector<FlvTypeI> &x, const double &beta, FLENSDataVector<FlvTypeII> &y) {
@@ -210,7 +256,7 @@ mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOpti
 	//Use standard blas::mv:
 	blas::mv(NoTrans, alpha, A, *static_cast<DenseVector<Array<double> > *>(&x), beta, *static_cast<DenseVector<Array<double> > *>(&y));
 		
-}
+}*/
 
 
 }	//namespace blas

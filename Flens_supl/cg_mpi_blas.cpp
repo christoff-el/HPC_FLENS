@@ -46,8 +46,11 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     }
     
     /*** MPI: Initialise direction p (as typeI residual ) ***/
+    
+    //II -> I invokes r1 II->I conversion:
     blas::copy(r2, r1);
-    r1.typeII_2_I();
+    
+    //I -> I uses standard copy:
     blas::copy(r1, p);
     
     //Compute squared Norm of residuals, rdot = r*r:
@@ -74,12 +77,12 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         //Update solution x by x += alpha*p:
         blas::axpy(alpha, p, x);
         
-        //Update (local = typeII) residual by r -= alpha*Ap:
+        //Update local (= typeII) residual by r -= alpha*Ap:
         blas::axpy(-alpha, Ap, r2);
 
         /*** MPI: Get global (=type I) residual ***/
+        //II -> I invokes r1 II->I conversion:
         blas::copy(r2, r1);
-        r1.typeII_2_I();
         
         //Compute  squared Norm of updated residuum rdot = r*r:
         rdotOld = rdot;
