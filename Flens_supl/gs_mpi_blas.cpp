@@ -8,7 +8,7 @@ template <typename MA, typename VX, typename VB, typename VBC>
 int
 gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max())
-{
+{/*
 	using namespace flens;
 
     typedef typename VB::ElementType  		ElementType;
@@ -28,7 +28,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      *      - boundary nodes (indexE),
      *      - inner nodes (indexI) 
      */
-    
+    /*
     // cross point are listed first
     int nV=coupling.local2globalCrossPoints.length();
     IVector indexV(nV);
@@ -91,7 +91,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      *      - first local values
      *      - communication to get global values
      */
-    
+    /*
     // set local values for A_EE and A_VV
     FLENSDataVector diag(numNodes, coupling, flens::typeII);
     VectorType subdiag(nE);
@@ -159,7 +159,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     /* 
      * Start iteration  
      */
-     
+     /*
     // initialize residual 
     FLENSDataVector r(numNodes, coupling, flens::nonMPI);
     // set x to zero at fixed nodes
@@ -186,7 +186,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 1.1:
          *    Calculate residual on crosspoints
          *    r_V = b_V - A_VV*x_V - A_VE*x_E - A_VI * x_I
-         */
+         *//*
         for(IndexType k=1; k<=nV; ++k)
         {
             if(coupling.crossPointsBdryData(k-1)==0)
@@ -203,12 +203,12 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *    Communicate with other proceses
          *    to compute typeI residual (w_V),
          *    saved in r as well
-         */
+         *//*
         r.commCrossPoints();
         
         /* Step 1.3:
          *    Update x at cross points 
-         */
+         *//*
         for(IndexType k=1; k<=nV; ++k)
         {
             x(k) += r(k)/diag(k);
@@ -216,7 +216,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 2.1:
          *    Calculate residual on boundary nodes 
          *    r_E = b_E - A_EV*x_V - A_EE*x_E - A_EI * x_I
-         */
+         *//*
         for(IndexType k=1; k<=nE; ++k)
         {
             IndexType idx = indexE(k);
@@ -232,7 +232,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *    Communicate with other proceses
          *    to compute typeI residual (w_E),
          *    saved in r as well
-         */
+         *//*
         r.commBoundaryNodes();
         
         /* Step 2.3:
@@ -240,7 +240,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *      - compute A_EE^-1*rE
          *      - update x
          */
-          
+          /*
         // Computation of A_EE^-1*rE:
         VectorType xE(nE), rE(nE);
         //  a) copy subdiagonals (as they are changed in solveTridiag)
@@ -264,7 +264,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 3:
          *    Calculate x on inner nodes: 
          *    Gauß-Seidel step in forward direction (only at FREE NODES)
-         */
+         *//*
         for(IndexType j=1; j<=numNodes; ++j)
         {
             if(innerNodes(j)==0)
@@ -279,7 +279,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
             }
         }
     }
-    
+    */
     return maxIterations;
 };
 
@@ -289,7 +289,7 @@ template <typename MA, typename VX, typename VB, typename VBC>
 int
 gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max())
-{
+{/*
     using namespace flens;
 
     typedef typename VB::ElementType        ElementType;
@@ -310,7 +310,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      *      - boundary nodes (indexE),
      *      - inner nodes (indexI) 
      */
-    
+    /*
     // cross point are listed first
     int nV=coupling.local2globalCrossPoints.length();
     IVector indexV(nV);
@@ -373,7 +373,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      *      - first local values
      *      - communication to get global values
      */
-    
+    /*
     // set local values for A_EE and A_VV
     FLENSDataVector diag(numNodes, coupling, flens::typeII);
     VectorType subdiag(nE);
@@ -466,7 +466,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     /* 
      * Start iteration  
      */
-     
+     /*
     // initialize residual 
     FLENSDataVector r(numNodes, coupling, flens::nonMPI);
     // set x to zero at fixed nodes
@@ -493,7 +493,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 1.1:
          *    Calculate residual on crosspoints
          *    r_V = b_V - A_VV*x_V - A_VE*x_E - A_VI * x_I
-         */
+         *//*
         for(IndexType k=1; k<=nV; ++k)
         {
             if(coupling.crossPointsBdryData(k-1)==0)
@@ -510,12 +510,12 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *    Communicate with other proceses
          *    to compute typeI residual (w_V),
          *    saved in r as well
-         */
+         *//*
         r.commCrossPoints();
         
         /* Step 1.3:
          *    Update x at cross points 
-         */
+         *//*
         for(IndexType k=1; k<=nV; ++k)
         {
             x(k) += r(k)/diag(k);
@@ -523,7 +523,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 2.1:
          *    Calculate residual on boundary nodes 
          *    r_E = b_E - A_EV*x_V - A_EE*x_E - A_EI * x_I
-         */
+         *//*
         for(IndexType k=1; k<=nE; ++k)
         {
             IndexType idx = indexE(k);
@@ -539,7 +539,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *    Communicate with other proceses
          *    to compute typeI residual (w_E),
          *    saved in r as well
-         */
+         *//*
         r.commBoundaryNodes();
         
         /* Step 2.3:
@@ -547,7 +547,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *      - compute A_EE^-1*rE
          *      - update x
          */
-          
+          /*
         // Computation of A_EE^-1*rE:
         VectorType xE(nE), rE(nE);
         //  a) copy subdiagonals (as they are changed in solveTridiag)
@@ -571,7 +571,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         /* Step 3:
          *    Calculate x on inner nodes: 
          *    Gauß-Seidel step in forward direction (only at FREE NODES)
-         */
+         *//*
         for(IndexType j=1; j<=numNodes; ++j)
         {
             if(innerNodes(j)==0)
@@ -586,7 +586,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
             }
         }
     }
-    
+    */
     return maxIterations;
 };
    

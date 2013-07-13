@@ -15,6 +15,16 @@ class FLvNonMPI;
 class FLvTypeI;
 class FLvTypeII;
 
+struct MethMPI {
+	typedef FLvTypeI  I;
+	typedef FLvTypeII II;
+};
+
+struct MethNonMPI {
+	typedef FLvNonMPI I;
+	typedef FLvNonMPI II;
+};
+
 template <typename VTYPE>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >

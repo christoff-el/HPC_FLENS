@@ -5,13 +5,15 @@
 using namespace flens;
 using namespace std;
 
-class FLvNonMPI{
-public:
-	static const bool check;};
+class FLvNonMPI;
 class FLvTypeI;
-class FLvTypeII{
-public:
-	static const bool check;
+class FLvTypeII;
+
+class MethMPI {
+public:	
+	typedef FLvTypeI  I;
+	typedef FLvTypeII II;
+	
 };
 
 
@@ -73,9 +75,10 @@ int main() {
 	typedef int                                              IndexType;
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
+    
     int t=1;
     FLENSDataVector<>* i;
-    FLENSDataVector<FLvTypeI> a(5,i);
+    FLENSDataVector<MethMPI::I> a(5,i);
     a(1)=99;
     FLENSDataVector<FLvTypeII> b(5,i);
     b(2)=101;

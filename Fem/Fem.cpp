@@ -1,3 +1,6 @@
+#ifndef FEM_CPP
+#define FEM_CPP 1
+
 #include "Fem.hpp"
 
 #include "Solver.hpp"
@@ -7,32 +10,48 @@
 /************************************    constructor   ******************************************************/
 /************************************************************************************************************/
 
-/* *** constructor that works for MPI and non-MPI */
-FEM::FEM(Mesh &mesh, double (*f)(double,double), 
-        		double (*DirichletData)(double,double), double (*g)(double,double))
+//'Default' constructor when an unsupported method specialisation instantiated:
+template <typename METH>
+FEM<METH>::FEM(Mesh &mesh, double (*f)(double,double), 
+        			double (*DirichletData)(double,double), double (*g)(double,double))
+{
+	METH::CHK;
+}
+
+//Non-MPI constructor:
+template <>
+FEM<flens::MethNonMPI>::FEM(Mesh &mesh, double (*f)(double,double), 
+        			double (*DirichletData)(double,double), double (*g)(double,double))
         :	_mesh(mesh),
         	fl_A(),
-	    	fl_uD(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
-         	fl_u(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
-         	fl_b(mesh.numNodes, mesh.coupling, (flens::VectorType)nonMPI),
+	    	fl_uD(mesh.numNodes),
+         	fl_u(mesh.numNodes),
+         	fl_b(mesh.numNodes),
          	_f(f),
          	_g(g),
          	_DirichletData(DirichletData)
 {
-    
-    //^^^ We initialise an empty CRS matrix via an empty coordinate storage sparse matrix.
-    
-    /*** Parallel version ***/
-    if (_mesh.distributed()) {  
-
-        fl_uD.vType = (flens::VectorType)typeI;
-        fl_u.vType  = (flens::VectorType)typeI;
-        fl_b.vType  = (flens::VectorType)typeII;
-    }
-
+	//Constructor to initialise FLENSDataVector<FLvNonMPI>'s without specifying coupling.
 }
 
-FEM::~FEM()
+//MPI constructor:
+template <>
+FEM<flens::MethMPI>::FEM(Mesh &mesh, double (*f)(double,double), 
+        			double (*DirichletData)(double,double), double (*g)(double,double))
+        :	_mesh(mesh),
+        	fl_A(),
+	    	fl_uD(mesh.numNodes, mesh.coupling),
+         	fl_u(mesh.numNodes, mesh.coupling),
+         	fl_b(mesh.numNodes, mesh.coupling),
+         	_f(f),
+         	_g(g),
+         	_DirichletData(DirichletData)
+{
+	//Constructor to initialise FLENSDataVector<FLvTypeI/II>s> specifying coupling.
+}
+
+template <typename METH>
+FEM<METH>::~FEM()
 {
     
 }
@@ -42,7 +61,9 @@ FEM::~FEM()
 /*******************************    mehtods for assembling   **********************************/
 /**********************************************************************************************/
 // assemble the Galerkin matrix and the right hand side 
-void FEM::assemble()
+template <typename METH>
+void 
+FEM<METH>::assemble()
 {
   	//Write values of dirichlet data:
     _updateDirichlet();
@@ -151,7 +172,7 @@ void FEM::assemble()
 
 
     /*** Set right-hand side vector b ***/    
-    flens::FLENSDataVector fl_Au(fl_uD.length(), _mesh.coupling, fl_b.vType);
+    flens::FLENSDataVector<flens::FLvTypeII> fl_Au(fl_uD.length(), _mesh.coupling);
         
 
     /*** Incorporate Dirichlet-Data ***/
@@ -164,7 +185,9 @@ void FEM::assemble()
 /***********************************************************************************************************/
 /**********************************    methods for solving SLE   *******************************************/
 /***********************************************************************************************************/
-void FEM::solve(Solver method)
+template <typename METH>
+void
+FEM<METH>::solve(Solver method)
 {    
 
     /*** Set fixed nodes (all Dirichletnodes) ***/
@@ -248,12 +271,12 @@ void FEM::solve(Solver method)
     	
     	//Serial solver:
 		if (!_mesh.distributed()) {
-			it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
+			//it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
+			//it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
 		}
 		
 	}
@@ -283,7 +306,9 @@ void FEM::solve(Solver method)
 /**********************************************************************************************************/
 /*******************************    methods for refinement   **********************************************/
 /**********************************************************************************************************/
-void FEM::refineRed()
+template <typename METH>
+void 
+FEM<METH>::refineRed()
 {
   /* In future projects this function will be modified such that all meshes
      are stored in a hierarchy object which is needed for the multigrid algorithm.
@@ -304,27 +329,32 @@ void FEM::refineRed()
 /**********************************************************************************************/
 /*******************************  getter and write methods   **********************************/
 /**********************************************************************************************/
-CRSMatrix FEM::getA()
+template <typename METH>
+CRSMatrix 
+FEM<METH>::getA()
 {
 	//HACK Err.. Turn if off for now.
   	return CRSMatrix();
 }
 
-DataVector FEM::getb()
+template <typename METH>
+flens::FLENSDataVector<flens::FLvTypeII> 
+FEM<METH>::getb()
 {
-	//HACK to return b as a DataVector:
-	DataVector _b(fl_b.coupling, fl_b.length(), (vectorType)fl_b.vType);
-	flens2funk_DataVector(fl_b, _b);
 	
-    return _b;
+    return fl_b;
 }
 
-int FEM::getNumElements()
+template <typename METH>
+int 
+FEM<METH>::getNumElements()
 {
     return _mesh.numElements;
 }
 
-void FEM::writeSolution(int proc, std::string filename)
+template <typename METH>
+void 
+FEM<METH>::writeSolution(int proc, std::string filename)
 {
 	_mesh.writeData(proc, filename);
 	
@@ -341,7 +371,9 @@ void FEM::writeSolution(int proc, std::string filename)
 /**********************************************************************************************/
 
 /* write the dirichlet data into the vector _uD and in the solution _u */
-void FEM::_updateDirichlet()
+template <typename METH>
+void 
+FEM<METH>::_updateDirichlet()
 {
 
     int index1;
@@ -375,3 +407,4 @@ void FEM::_updateDirichlet()
 }    
 
 
+#endif	//FEM_CPP

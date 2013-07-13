@@ -9,6 +9,7 @@ namespace flens{
 //Non-MPI --> Restricted to only FLnonMPI specialisation.
 template <typename VTYPE>
 FLENSDataVector<VTYPE>::FLENSDataVector(int n)
+	:	coupling(Coupling())
 {
 	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
 						//		e.g. if FLENSDataVector<double> instantiated.
@@ -17,15 +18,17 @@ FLENSDataVector<VTYPE>::FLENSDataVector(int n)
 template <>
 FLENSDataVector<FLvNonMPI>::FLENSDataVector(int n)
 	: 	DenseVector<Array<double> >(n),
-		coupling(NULL)
+		coupling(Coupling())
 {
 	//Permits instatiation of FlNonMPI specialisation.
 }
 
 
-//MPI --> Restricted to only FLvTypeI, FLvTypeII specialisations.
+//MPI --> Restricted to only FLvTypeI, FLvTypeII specialisations. 
+//				FLvNonMPI is permitted, but supplied 
 template <typename VTYPE>
 FLENSDataVector<VTYPE>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	coupling(Coupling())
 {
 	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
 						//		e.g. if FLENSDataVector<double> instantiated.
@@ -69,7 +72,7 @@ FLENSDataVector<FLvTypeI>::typeII_2_I()
 
 template <>
 void
-FLENSDataVector<FlvTypeI>::typeI_2_II()
+FLENSDataVector<FLvTypeI>::typeI_2_II()
 {
 
 	//assert(vType == typeI);
@@ -87,7 +90,7 @@ FLENSDataVector<FlvTypeI>::typeI_2_II()
 	}
 	
 	//Update type:
-	vType = typeII;
+	//vType = typeII;
 
 }
 
@@ -96,28 +99,29 @@ void
 FLENSDataVector<VTYPE>::commCrossPoints()
 {
 	
-	FLENSDataVector u_crossPoints(coupling.numCrossPoints);
+	DenseVector<Array<double> > u_crossPoints(coupling.numCrossPoints);
 
 	//Local values at all global cross points:
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
 		u_crossPoints(coupling.local2globalCrossPoints(i)) = (*this)(i+1);
 	}
 
-	double *u_crossPoints_tr = u_crossPoints.vec2c();
+	//double *u_crossPoints_tr = u_crossPoints.vec2c();
 	
 	//std::cout<<u_crossPoints_tr[1]<<std::endl;
-	double *u_crossPoints_gl = new double[coupling.numCrossPoints];
+	//double *u_crossPoints_gl = new double[coupling.numCrossPoints];
+	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
 	 
 	/*** MPI Communication for global cross points ***/
-	MPI::COMM_WORLD.Allreduce(u_crossPoints_tr, u_crossPoints_gl, coupling.numCrossPoints,
+	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints.engine().data(), coupling.numCrossPoints,
 										MPI::DOUBLE, MPI::SUM);
 
-	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
-		(*this)(i+1) = u_crossPoints_gl[coupling.local2globalCrossPoints(i)-1];
-	}
+	//for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
+	//	(*this)(i+1) = u_crossPoints_gl[coupling.local2globalCrossPoints(i)-1];
+	//}
 
-	delete[] u_crossPoints_tr;
-	delete[] u_crossPoints_gl;
+	//delete[] u_crossPoints_tr;
+	//delete[] u_crossPoints_gl;
 
 }
 
@@ -133,30 +137,30 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 				//Only communicate if there is a boundary node on coupling boundary (no cross points):
 				int sendLength = coupling.boundaryNodes[j].length()-2;
 
-				DenseVector<Array<int> > sendIndex(sendLength);
-				for (int k=0; k<sendLength; ++k) {					//copy manually until we can use blas::copy
-					sendIndex(k+1) = coupling.boundaryNodes[j](k+1);
-				}
+				//DenseVector<Array<int> > sendIndex(sendLength);
+				//for (int k=0; k<sendLength; ++k) {					//copy manually until we can use blas::copy
+				//	sendIndex(k+1) = coupling.boundaryNodes[j](k+1);
+				//}
 
-				double *u_send = new double[sendLength];
-				double *u_recv = new double[sendLength];
+				DenseVector<Array<double> > u_send(sendLength);
+				DenseVector<Array<double> > u_recv(sendLength);
 				
-				//Set local values:
-				for (int k=0; k<sendLength; ++k) {
-					u_send[k] = (*this)(sendIndex(k+1));
+				//Set local values to be sent:
+				for (int k=1; k<=sendLength; ++k) {
+					u_send(k) = (*this)(coupling.boundaryNodes[j](k));
 				}
 
 				//Get values from other processes:
-				MPI::COMM_WORLD.Sendrecv(u_send, sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1, 0,
-											u_recv, sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1,0);
+				MPI::COMM_WORLD.Sendrecv(u_send.engine().data(), sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1, 0,
+											u_recv.engine().data(), sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1,0);
 				
-				//Add values from other processes (!!numbering is opposite):
+				//Add values collected from the other processes (!!numbering is opposite):
 				for (int k=0; k<sendLength; ++k) {
-					(*this)(sendIndex(k+1)) += u_recv[sendLength-k-1];
+					(*this)(coupling.boundaryNodes[j](k+1)) += u_recv(sendLength-k);
 				}
 
-				delete[] u_send;
-				delete[] u_recv;
+				//delete[] u_send;
+				//delete[] u_recv;
 				
 			}
 		}
@@ -218,14 +222,14 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1), *static_cast<DenseVector<Array<double> > *>(&x2));
 	
 	//If no communication is required, then we are done:
-	if (x1.vType==nonMPI && x2.vType==nonMPI) {
-		return value;
-	}
+	//if (x1.vType==nonMPI && x2.vType==nonMPI) {
+	//	return value;
+	//}
 	
 	//If communication is required..:
 	
 	//We only multiply typeI with typeII:
-	assert(x1.vType != x2.vType);
+	//assert(x1.vType != x2.vType);
 	
 	//Receive buffer:
 	double buf = 0;

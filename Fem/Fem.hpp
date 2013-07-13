@@ -1,5 +1,5 @@
 #ifndef FEM_H_
-#define FEM_H_
+#define FEM_H_ 1
 
 #include <flens/flens.cxx>
 #include <vector>
@@ -17,56 +17,65 @@
 // flags for solving SLE
 enum Solver { cg, pcg, gs, mg, jac };
 
+template <typename METH>
 class FEM{
 public:
 	
-	/* *** constructors and destructor *****************************************************/
+	/*** Constructors and destructor *****************************************************/
 	FEM(Mesh &mesh_tmp, 
-	double (*f)(double,double), 
-	double (*DirichletData)(double,double), 
-	double (*g)(double,double));
+			double (*f)(double,double), 
+			double (*DirichletData)(double,double), 
+			double (*g)(double,double));
 	
 	~FEM();	
 		
-	/* *** methods for assembling **********************************************************/
+	/*** Method for assembly *************************************************************/
 	void assemble();
 		
-	/* *** methods for solving SLE *********************************************************/
+	/*** Method for solving SLE **********************************************************/
 	void solve(Solver method);
 		
-	/* *** methods for refinement **********************************************************/
+	/*** Method for refinement ***********************************************************/
 	void refineRed();
 		
-	/* *** getter and write methods ********************************************************/
+	/*** getter and write methods ********************************************************/
 	CRSMatrix getA();
-	DataVector getb();
+	flens::FLENSDataVector<flens::FLvTypeII> getb();
 		
     int getNumElements();
 	void writeSolution(int proc=0,std::string filename="./output/");		
 			
-	/* *** public variables ****************************************************************/
-	// variables for solving SLE
+	/*** Public variables ****************************************************************/
+	
+	//Parameters for solving SLE:
 	int maxIt;
 	double tol; 
 		
 private:
-	/* *** private variables **************************************************************/
-	// local mesh
+
+	/*** Private variables ***************************************************************/
+	
+	//Local mesh:
 	Mesh _mesh; 
 		
-	// variables for FEM
+	//Storage structures for FEM system:
 	flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > > fl_A;
-	flens::FLENSDataVector fl_uD, fl_u, fl_b;
+	
+	flens::FLENSDataVector<typename METH:: I>  fl_uD, fl_u;
+	flens::FLENSDataVector<typename METH:: II> fl_b;
 		
-	// function pointers for Dirichlet-/Neumann-data and right-hand side
+	//Function pointers for Dirichlet-/Neumann-data and right-hand side:
 	double (*_f)(double, double);
 	double (*_g)(double, double);
 	double (*_DirichletData)(double,double);
 		
-	/* *** private routines **************************************************************/
+	/*** Private routines ****************************************************************/
 	void _updateDirichlet();
 	
 };
+
+
+#include "Fem.cpp"
 
 #endif
 
