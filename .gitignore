@@ -1,8 +1,11 @@
 .DS_Store
 *.o
+*.out
 *.a
 b.*
 /examples/output/
 /Original/examples/output
 
 examples/output/A_serial.txt
+examples/main-serial
+examples/main-parallel
