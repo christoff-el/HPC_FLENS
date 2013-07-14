@@ -40,7 +40,7 @@ public:
 		
 	/*** getter and write methods ********************************************************/
 	CRSMatrix getA();
-	flens::FLENSDataVector<flens::FLvTypeII> getb();
+	flens::FLENSDataVector<typename METH:: II> getb();
 		
     int getNumElements();
 	void writeSolution(int proc=0,std::string filename="./output/");		

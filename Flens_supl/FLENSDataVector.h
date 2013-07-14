@@ -39,13 +39,8 @@ struct FLENSDataVector
 	FLENSDataVector(int n, const Coupling &_coupling);
     
 	//Copy constructor (VTYPEs obligated to match):
-	FLENSDataVector(const FLENSDataVector<VTYPE> &rhs)
-    	:	DenseVector<Array<double> >(rhs),			//copy data via flens framework
-    		//vType(rhs.vType),
-			coupling(rhs.coupling)
-	{
-	}
-    
+	FLENSDataVector(const FLENSDataVector<VTYPE> &rhs);
+	    
 
 	//Member objects:
     //VectorType vType;
@@ -58,8 +53,8 @@ struct FLENSDataVector
 	void commCrossPoints();
 	void commBoundaryNodes();
 	
-	double* vec2c();
-	
+	void writeData(int proc, std::string filename);
+	//double* vec2c();
 
 };
 

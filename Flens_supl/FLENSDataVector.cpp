@@ -51,6 +51,14 @@ FLENSDataVector<FLvTypeII>::FLENSDataVector(int n, const Coupling &_coupling)
 }
 	
 	
+//Copy constructor (VTYPEs obligated to match):
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(const FLENSDataVector<VTYPE> &rhs)
+   	:	DenseVector<Array<double> >(rhs),			//copy data via flens framework
+   		//vType(rhs.vType),
+		coupling(rhs.coupling)
+{
+}
 
 template <>	
 void
@@ -113,12 +121,12 @@ FLENSDataVector<VTYPE>::commCrossPoints()
 	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
 	 
 	/*** MPI Communication for global cross points ***/
-	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints.engine().data(), coupling.numCrossPoints,
+	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints_gl.engine().data(), coupling.numCrossPoints,
 										MPI::DOUBLE, MPI::SUM);
 
-	//for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
-	//	(*this)(i+1) = u_crossPoints_gl[coupling.local2globalCrossPoints(i)-1];
-	//}
+	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
+		(*this)(i+1) = u_crossPoints_gl(coupling.local2globalCrossPoints(i));
+	}
 
 	//delete[] u_crossPoints_tr;
 	//delete[] u_crossPoints_gl;
@@ -168,7 +176,7 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 
 }
 
-template <typename VTYPE>
+/*template <typename VTYPE>
 double*
 FLENSDataVector<VTYPE>::vec2c()
 {
@@ -184,9 +192,41 @@ FLENSDataVector<VTYPE>::vec2c()
 
 	return cVec;
 
+}*/
+
+template <typename VTYPE>
+void 
+FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
+{
+
+    std::string strproc;
+  
+    if (proc==0)  strproc="";
+    else {
+    	std::stringstream ss;
+    	ss << proc;
+    	strproc = ss.str();
+    }
+    
+    filename = filename + strproc + ".dat";
+
+	std::fstream f;
+	
+	f.open(filename.c_str(), std::ios::out);
+	if (f.is_open()){
+	
+		for (int i=1; i<=(*this).length(); ++i) {
+			f << (*this)(i) << std::endl;
+		}
+		
+		f.close();
+		
+	}
+    
 }
 
 }	//namespace flens
+
 
 namespace flens{ namespace blas{
 

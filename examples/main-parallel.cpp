@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
     FEM<flens::MethMPI> fem(mesh, f, DirichletData,NeumannData); 
 
     fem.assemble();
-    fem.solve(gs);
+    fem.solve(cg);
     //fem.solve(gs);
     
 	fem.writeSolution(rank);

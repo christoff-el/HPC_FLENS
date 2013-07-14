@@ -338,7 +338,7 @@ FEM<METH>::getA()
 }
 
 template <typename METH>
-flens::FLENSDataVector<flens::FLvTypeII> 
+flens::FLENSDataVector<typename METH:: II> 
 FEM<METH>::getb()
 {
 	
@@ -358,11 +358,7 @@ FEM<METH>::writeSolution(int proc, std::string filename)
 {
 	_mesh.writeData(proc, filename);
 	
-	//HACK to write from DataVector:
-	DataVector _u(fl_u.coupling, fl_u.length(), (vectorType)fl_u.vType);
-	flens2funk_DataVector(fl_u, _u);
-	
-	_u.writeData(proc, filename + "solution");
+	fl_u.writeData(proc, filename + "solution");
 	
 }
 
