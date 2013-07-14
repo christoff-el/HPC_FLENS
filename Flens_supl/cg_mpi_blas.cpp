@@ -72,7 +72,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         
         //Compute alpha = rdot/(p * Ap):
         alpha = rdot; 
-        alpha /= blas::dot(p, Ap);
+        alpha /= blas::dot(Ap, p);
         
         //Update solution x by x += alpha*p:
         blas::axpy(alpha, p, x);

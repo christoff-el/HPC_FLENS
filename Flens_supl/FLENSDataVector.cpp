@@ -2,7 +2,7 @@
 #define FLENS_DATA_VECTOR_CPP 1
 
 #include "FLENSDataVector.h"
-
+#include <iostream>
 namespace flens{
 
 
@@ -96,9 +96,6 @@ FLENSDataVector<FLvTypeI>::typeI_2_II()
 			(*this)(coupling.boundaryNodes[i](j)) /= 2.;
 		}
 	}
-	
-	//Update type:
-	//vType = typeII;
 
 }
 
@@ -106,30 +103,22 @@ template <typename VTYPE>
 void
 FLENSDataVector<VTYPE>::commCrossPoints()
 {
-	
-	DenseVector<Array<double> > u_crossPoints(coupling.numCrossPoints);
 
+	DenseVector<Array<double> > u_crossPoints(coupling.numCrossPoints);
+	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
+	
 	//Local values at all global cross points:
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
 		u_crossPoints(coupling.local2globalCrossPoints(i)) = (*this)(i+1);
 	}
 
-	//double *u_crossPoints_tr = u_crossPoints.vec2c();
-	
-	//std::cout<<u_crossPoints_tr[1]<<std::endl;
-	//double *u_crossPoints_gl = new double[coupling.numCrossPoints];
-	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
-	 
 	/*** MPI Communication for global cross points ***/
-	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints_gl.engine().data(), coupling.numCrossPoints,
-										MPI::DOUBLE, MPI::SUM);
+	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints_gl.engine().data(),
+								 coupling.numCrossPoints, MPI::DOUBLE, MPI::SUM);
 
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
 		(*this)(i+1) = u_crossPoints_gl(coupling.local2globalCrossPoints(i));
 	}
-
-	//delete[] u_crossPoints_tr;
-	//delete[] u_crossPoints_gl;
 
 }
 
@@ -144,11 +133,6 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 			
 				//Only communicate if there is a boundary node on coupling boundary (no cross points):
 				int sendLength = coupling.boundaryNodes[j].length()-2;
-
-				//DenseVector<Array<int> > sendIndex(sendLength);
-				//for (int k=0; k<sendLength; ++k) {					//copy manually until we can use blas::copy
-				//	sendIndex(k+1) = coupling.boundaryNodes[j](k+1);
-				//}
 
 				DenseVector<Array<double> > u_send(sendLength);
 				DenseVector<Array<double> > u_recv(sendLength);
@@ -166,17 +150,14 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 				for (int k=0; k<sendLength; ++k) {
 					(*this)(coupling.boundaryNodes[j](k+1)) += u_recv(sendLength-k);
 				}
-
-				//delete[] u_send;
-				//delete[] u_recv;
-				
+			
 			}
 		}
   	}    
 
 }
 
-/*template <typename VTYPE>
+template <typename VTYPE>
 double*
 FLENSDataVector<VTYPE>::vec2c()
 {
@@ -192,7 +173,7 @@ FLENSDataVector<VTYPE>::vec2c()
 
 	return cVec;
 
-}*/
+}
 
 template <typename VTYPE>
 void 
@@ -281,26 +262,14 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 
 }
 
-/*//Overloaded mv, for type updating:
-void
-mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector<FlvTypeI> &x, const double &beta, FLENSDataVector<FlvTypeII> &y) {
+//Adds commutativity:
+double
+dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
+{
 	
-	//Make sure we have the right vector type x:
-	assert(x.vType==nonMPI || x.vType==typeI);
+	return dot(x2,x1);
 	
-	//Update y type based on x type:
-	if (x.vType == nonMPI) {
-		y.vType = nonMPI;
-	}
-	else {
-		y.vType = typeII;
-	}
-	
-	//Use standard blas::mv:
-	blas::mv(NoTrans, alpha, A, *static_cast<DenseVector<Array<double> > *>(&x), beta, *static_cast<DenseVector<Array<double> > *>(&y));
-		
-}*/
+}
 
 
 }	//namespace blas

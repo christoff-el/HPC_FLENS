@@ -9,8 +9,6 @@
 
 namespace flens{
 
-//enum VectorType {typeI, typeII, nonMPI};
-
 class FLvNonMPI;
 class FLvTypeI;
 class FLvTypeII;
@@ -25,7 +23,7 @@ struct MethNonMPI {
 	typedef FLvNonMPI II;
 };
 
-template <typename VTYPE>
+template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
@@ -47,14 +45,14 @@ struct FLENSDataVector
 	const Coupling &coupling;
 
 	//Member methods:
-	void typeII_2_I();				// <-- assumes conversion within TypeI	(data already copied).
-	void typeI_2_II();				// <-- assumes conversion within TypeII
+	void typeII_2_I();				// <-- applies conversion within a TypeI	(data already copied).
+	void typeI_2_II();				// <-- applies conversion within a TypeII
 	
 	void commCrossPoints();
 	void commBoundaryNodes();
 	
 	void writeData(int proc, std::string filename);
-	//double* vec2c();
+	double* vec2c();
 
 };
 
@@ -65,14 +63,11 @@ namespace flens{ namespace blas{
 void 
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest);
 
-template <typename VTYPE>
 double
 dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2);
 
-/*template <typename VTYPE>
-void
-mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector &x<FlvTypeI>, const double &beta, FLENSDataVector &y<FlvTypeII>);*/
+double
+dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2);
 
 
 }	//namespace blas

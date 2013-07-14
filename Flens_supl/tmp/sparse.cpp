@@ -87,7 +87,15 @@ int main() {
     cout<<a<<endl;
     cout<<b<<endl;
     
-    
+    DenseVector<Array<double> > g(5);
+    //g(1) = 767;
+    //cout<<g<<endl;
+    //const double &g5 = g.engine().data();
+    double *g5 = new double[5];
+    g5[0]=1;
+    g5[4]=123;
+    //g.engine().data()=&g5;
+    cout << g<<endl;
     /*FLENSDataVector b(5);
     b(2)=99;
     b(3)=1;
