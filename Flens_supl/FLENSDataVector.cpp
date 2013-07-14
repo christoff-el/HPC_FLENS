@@ -55,7 +55,6 @@ FLENSDataVector<FLvTypeII>::FLENSDataVector(int n, const Coupling &_coupling)
 template <typename VTYPE>
 FLENSDataVector<VTYPE>::FLENSDataVector(const FLENSDataVector<VTYPE> &rhs)
    	:	DenseVector<Array<double> >(rhs),			//copy data via flens framework
-   		//vType(rhs.vType),
 		coupling(rhs.coupling)
 {
 }
@@ -65,16 +64,11 @@ void
 FLENSDataVector<FLvTypeI>::typeII_2_I()
 {
 
-	//assert(vType==typeII);
-	
 	//Sum up values at cross points:
 	commCrossPoints();
 
 	//Sum up values at boundary nodes:
 	commBoundaryNodes();
-	
-	//Update VectorType:
-	//vType = typeI;
 
 }
 
@@ -83,8 +77,6 @@ void
 FLENSDataVector<FLvTypeI>::typeI_2_II()
 {
 
-	//assert(vType == typeI);
-	
 	//Divide values at cross points by the number of processes:
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
 		(*this)(i+1) /= coupling.crossPointsNumProcs(i);
@@ -158,24 +150,6 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 }
 
 template <typename VTYPE>
-double*
-FLENSDataVector<VTYPE>::vec2c()
-{
-
-	double *cVec = new double[(*this).length()];
-	
-	//Copy FLENS vector to C array:
-	for (int i=1; i<=(*this).length(); ++i) {
-	
-		cVec[i-1] = (*this)(i);
-	
-	}
-
-	return cVec;
-
-}
-
-template <typename VTYPE>
 void 
 FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
 {
@@ -224,8 +198,7 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 	//blas::copy(*tmpOrig, *tmpDest);
 	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig), *static_cast<DenseVector<Array<double> > *>(&dest));
 
-	//Transfer vector type:
-	//dest.vType = orig.vType;
+	//Perform vector type conversion:
 	dest.typeII_2_I();
 
 	//(coupling can't be transferred)
@@ -242,16 +215,6 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 		
 	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1), *static_cast<DenseVector<Array<double> > *>(&x2));
 	
-	//If no communication is required, then we are done:
-	//if (x1.vType==nonMPI && x2.vType==nonMPI) {
-	//	return value;
-	//}
-	
-	//If communication is required..:
-	
-	//We only multiply typeI with typeII:
-	//assert(x1.vType != x2.vType);
-	
 	//Receive buffer:
 	double buf = 0;
 
@@ -262,7 +225,7 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 
 }
 
-//Adds commutativity:
+//Adds commutativity to dot:
 double
 dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
 {

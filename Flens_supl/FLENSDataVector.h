@@ -41,7 +41,6 @@ struct FLENSDataVector
 	    
 
 	//Member objects:
-    //VectorType vType;
 	const Coupling &coupling;
 
 	//Member methods:
@@ -52,7 +51,6 @@ struct FLENSDataVector
 	void commBoundaryNodes();
 	
 	void writeData(int proc, std::string filename);
-	double* vec2c();
 
 };
 

@@ -360,13 +360,7 @@ void
 FEM<METH>::writeSolution(int proc, std::string filename)
 {
 	_mesh.writeData(proc, filename);
-	
 	fl_u.writeData(proc, filename + "solution");
-	
-	/*const int rank = MPI::COMM_WORLD.Get_rank();
-        	if (rank==3){std::cout<<"soln"<<std::endl;
-        	for (int i=1; i<=fl_u.length(); ++i){std::cout<<fl_u(i)<<std::endl;}}*/
-	
 }
 
 /**********************************************************************************************/
