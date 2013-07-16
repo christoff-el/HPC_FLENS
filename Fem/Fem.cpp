@@ -52,7 +52,8 @@ void FEM::assemble()
     double c1[2], d21[2], d31[2];
     double area4, fval, a, b, c;
     
-    for (int i=0; i<_mesh.numElements; ++i) {
+    for (int i=0; i<_mesh.numElements; ++i)
+    {
   
         /*** Assemble stiffness matrix A ***/
         
@@ -60,26 +61,27 @@ void FEM::assemble()
         // c1 = first vertex of element, 
         // d21 vector from first to second vertex, 
         // d31 vector from third to first vertex:
-        c1[0]  = _mesh.coordinates( _mesh.elements(i,0)-1,0 );
-        c1[1]  = _mesh.coordinates( _mesh.elements(i,0)-1,1 );
-        d21[0] = _mesh.coordinates( _mesh.elements(i,1)-1,0 ) - c1[0];
-        d21[1] = _mesh.coordinates( _mesh.elements(i,1)-1,1 ) - c1[1];
-        d31[0] = _mesh.coordinates( _mesh.elements(i,2)-1,0 ) - c1[0];
-        d31[1] = _mesh.coordinates( _mesh.elements(i,2)-1,1 ) - c1[1];
+        c1[0]  = _mesh.coordinates( _mesh.elements(i+1,1),1 ); //<-----numbering starts at 1
+        c1[1]  = _mesh.coordinates( _mesh.elements(i+1,1),2 );
+        d21[0] = _mesh.coordinates( _mesh.elements(i+1,2),1 ) - c1[0];
+        d21[1] = _mesh.coordinates( _mesh.elements(i+1,2),2 ) - c1[1];
+        d31[0] = _mesh.coordinates( _mesh.elements(i+1,3),1 ) - c1[0];
+        d31[1] = _mesh.coordinates( _mesh.elements(i+1,3),2 ) - c1[1];
         
         //Compute 4*|T_i| via 2-dimensional cross product:
         area4 = 2*(d21[0]*d31[1] - d21[1]*d31[0]);
         
         //Set I and J  (row and column index)
-        for(int j=0; j<3; ++j) {
+        for(int j=0; j<3; ++j) 
+        {
         
-            I(i*9+j  +1) = _mesh.elements(i,j);
-            I(i*9+j+3+1) = _mesh.elements(i,j);
-            I(i*9+j+6+1) = _mesh.elements(i,j);
+            I(i*9+j  +1) = _mesh.elements(i+1,j+1);
+            I(i*9+j+3+1) = _mesh.elements(i+1,j+1);
+            I(i*9+j+6+1) = _mesh.elements(i+1,j+1);
         
-            J(i*9+3*j  +1) = _mesh.elements(i,j);
-            J(i*9+3*j+1+1) = _mesh.elements(i,j);
-            J(i*9+3*j+2+1) = _mesh.elements(i,j);
+            J(i*9+3*j  +1) = _mesh.elements(i+1,j+1);
+            J(i*9+3*j+1+1) = _mesh.elements(i+1,j+1);
+            J(i*9+3*j+2+1) = _mesh.elements(i+1,j+1);
             
         }
         
@@ -103,9 +105,9 @@ void FEM::assemble()
         
         //Evaluate volume force f at center of mass of each element:
         fval = _f( c1[0] + (d21[0]+d31[0])/3., c1[1] + (d21[1]+d31[1])/3. ) / 12. * area4;
-        fl_b( _mesh.elements(i,0)) += fval;
-        fl_b( _mesh.elements(i,1)) += fval;
-        fl_b( _mesh.elements(i,2)) += fval;
+        fl_b( _mesh.elements(i+1,1)) += fval;
+        fl_b( _mesh.elements(i+1,2)) += fval;
+        fl_b( _mesh.elements(i+1,3)) += fval;
         
     }
 
@@ -116,13 +118,13 @@ void FEM::assemble()
     for(int k=0; k<_mesh.numNeumann; ++k) {
     
         //Walk through all neumann edges:
-        for(int j=0; j<_mesh.neumann[k].length()-1; ++j) {
+        for(int j=1; j<=_mesh.neumann[k].length()-1; ++j) {
         
             double cn1[2],cn2[2], length2;
-            cn1[0]  = _mesh.coordinates(_mesh.neumann[k](j)  -1,0);
-            cn1[1]  = _mesh.coordinates(_mesh.neumann[k](j)  -1,1);
-            cn2[0]  = _mesh.coordinates(_mesh.neumann[k](j+1)-1,0);
-            cn2[1]  = _mesh.coordinates(_mesh.neumann[k](j+1)-1,1);
+            cn1[0]  = _mesh.coordinates(_mesh.neumann[k](j),1);
+            cn1[1]  = _mesh.coordinates(_mesh.neumann[k](j),2);
+            cn2[0]  = _mesh.coordinates(_mesh.neumann[k](j+1),1);
+            cn2[1]  = _mesh.coordinates(_mesh.neumann[k](j+1),2);
             length2 = sqrt( (cn1[0]-cn2[0])*(cn1[0]-cn2[0]) + (cn1[1]-cn2[1])*(cn1[1]-cn2[1]) ) / 2.;
             
             //Evaluate Neumann data g at midpoint of neumann edge and multiply with half length:
@@ -185,7 +187,7 @@ void FEM::solve(Solver method)
     
     	//Setting:
     	for (int l=index; l<index+_mesh.dirichlet[k].length(); ++l) {
-    		fixedNodes(l) = _mesh.dirichlet[k](l-1);			//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
+    		fixedNodes(l) = _mesh.dirichlet[k](l);			//fixedNodes.set(index, _mesh.dirichlet[k].length(), _mesh.dirichlet[k].data() );
         }
         
         index += _mesh.dirichlet[k].length();
@@ -345,12 +347,12 @@ void FEM::_updateDirichlet()
 
     int index1;
     for (int k=0; k<_mesh.numDirichlet; ++k) {
-        for (int i=0; i<_mesh.dirichlet[k].length(); ++i) {
+        for (int i=1; i<=_mesh.dirichlet[k].length(); ++i) {
         
         	index1 = _mesh.dirichlet[k](i);
         	
             //Set Dirichlet data on nodes:
-         	fl_uD(index1) = _DirichletData(_mesh.coordinates(index1-1,0), _mesh.coordinates(index1-1,1));
+         	fl_uD(index1) = _DirichletData(_mesh.coordinates(index1,1), _mesh.coordinates(index1,2));
          	
        		//Set Dirichlet data in solution vector:
        		fl_u(index1) = fl_uD(index1);
@@ -358,15 +360,15 @@ void FEM::_updateDirichlet()
         }
     }
     
-    for (int i=0; i<_mesh.coupling.crossPointsBdryData.length(); ++i) {
+    for (int i=1; i<=_mesh.coupling.crossPointsBdryData.length(); ++i) {
     
-        if (_mesh.coupling.crossPointsBdryData(i+1)!=0) {
+        if (_mesh.coupling.crossPointsBdryData(i)!=0) {
         
             //Set Dirichlet data on nodes:
-      		fl_uD(i+1) = _DirichletData(_mesh.coordinates(i,0), _mesh.coordinates(i,1));
+      		fl_uD(i) = _DirichletData(_mesh.coordinates(i,1), _mesh.coordinates(i,2));
       		
       		//Set Dirichlet data in solution vector:
-      		fl_u(i+1) = fl_uD(i+1);
+      		fl_u(i) = fl_uD(i);
       		
         }
     }  
