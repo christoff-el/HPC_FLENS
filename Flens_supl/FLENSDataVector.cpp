@@ -105,8 +105,10 @@ FLENSDataVector<VTYPE>::commCrossPoints()
 	}
 
 	/*** MPI Communication for global cross points ***/
-	MPI::COMM_WORLD.Allreduce(u_crossPoints.engine().data(), u_crossPoints_gl.engine().data(),
-								 coupling.numCrossPoints, MPI::DOUBLE, MPI::SUM);
+	MPI::COMM_WORLD.Allreduce(u_crossPoints.data(),
+						      u_crossPoints_gl.data(),
+							  coupling.numCrossPoints,
+							  MPI::DOUBLE, MPI::SUM);
 
 	for (int i=0; i<coupling.local2globalCrossPoints.length(); ++i) {
 		(*this)(i+1) = u_crossPoints_gl(coupling.local2globalCrossPoints(i));
@@ -135,8 +137,10 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 				}
 
 				//Get values from other processes:
-				MPI::COMM_WORLD.Sendrecv(u_send.engine().data(), sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1, 0,
-											u_recv.engine().data(), sendLength, MPI::DOUBLE, coupling.neighbourProcs(j)-1,0);
+				MPI::COMM_WORLD.Sendrecv(u_send.engine().data(), sendLength, MPI::DOUBLE, 
+											coupling.neighbourProcs(j)-1, 0,
+											u_recv.engine().data(), sendLength, MPI::DOUBLE, 
+											coupling.neighbourProcs(j)-1,0);
 				
 				//Add values collected from the other processes (!!numbering is opposite):
 				for (int k=0; k<sendLength; ++k) {
@@ -196,7 +200,8 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 	
 	//Copy data as usual (masquerading as a DenseVector :) ):
 	//blas::copy(*tmpOrig, *tmpDest);
-	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig), *static_cast<DenseVector<Array<double> > *>(&dest));
+	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
+			   *static_cast<DenseVector<Array<double> > *>(&dest));
 
 	//Perform vector type conversion:
 	dest.typeII_2_I();
@@ -212,8 +217,9 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 	//Upcast to DenseVector, and use the standard blas::dot:
 	//DenseVector<Array<double> > *tmpx1 = &x1;
 	//DenseVector<Array<double> > *tmpx2 = &x2;
-		
-	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1), *static_cast<DenseVector<Array<double> > *>(&x2));
+	
+	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1),
+	                         *static_cast<DenseVector<Array<double> > *>(&x2));
 	
 	//Receive buffer:
 	double buf = 0;

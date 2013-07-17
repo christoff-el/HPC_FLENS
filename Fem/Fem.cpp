@@ -260,9 +260,6 @@ FEM<METH>::solve(Solver method)
         
         //Parallel solver:
         else { 
-        	const int rank = MPI::COMM_WORLD.Get_rank();
-        	if (rank==0){
-        	for (int i=1; i<=fl_b.length(); ++i){std::cout<<fl_b(i)<<std::endl;}}
             it = cg_mpi_blas(fl_A ,fl_b, fl_u, fixedNodes,  maxIt, tol);
         }
         

@@ -17,6 +17,26 @@
 // flags for solving SLE
 enum Solver { cg, pcg, gs, mg, jac };
 
+template <typename A>
+struct SelectDataVector
+{
+};
+
+template <>
+struct SelectDataVector<flens::MethMPI>
+{
+    typedef flens::FLENSDataVector<flens::FLvTypeI> 	TypeI;
+    typedef flens::FLENSDataVector<flens::FLvTypeII> 	TypeII;
+};
+
+template <>
+struct SelectDataVector<flens::MethNonMPI>
+{
+    typedef flens::FLENSDataVector<flens::FLvNonMPI> 	TypeI;
+    typedef flens::FLENSDataVector<flens::FLvNonMPI> 	TypeII;
+};
+
+
 template <typename METH>
 class FEM{
 public:
@@ -61,8 +81,8 @@ private:
 	//Storage structures for FEM system:
 	flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > > fl_A;
 	
-	flens::FLENSDataVector<typename METH:: I>  fl_uD, fl_u;
-	flens::FLENSDataVector<typename METH:: II> fl_b;
+	typename SelectDataVector<METH>::TypeI    fl_uD, fl_u;
+	typename SelectDataVector<METH>::TypeII   fl_b;
 		
 	//Function pointers for Dirichlet-/Neumann-data and right-hand side:
 	double (*_f)(double, double);

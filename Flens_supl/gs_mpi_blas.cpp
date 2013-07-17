@@ -294,7 +294,8 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
     typedef typename VB::ElementType        ElementType;
     typedef typename VB::IndexType          IndexType;
-    typedef VB                              VectorType;
+    typedef VX								VectorTypeI;
+    typedef VB                              VectorTypeII;
     typedef DenseVector<Array<IndexType> >  IVector;
 
     ElementType Zero(0);
@@ -375,7 +376,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      */
     /*
     // set local values for A_EE and A_VV
-    FLENSDataVector diag(numNodes, coupling, flens::typeII);
+    FLENSDataVector<FLvTypeI> diag(numNodes, coupling);
     VectorType subdiag(nE);
     IndexType idxk;
 
@@ -468,7 +469,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      */
      /*
     // initialize residual 
-    FLENSDataVector r(numNodes, coupling, flens::nonMPI);
+    FLENSDataVector<> r(numNodes, coupling);
     // set x to zero at fixed nodes
     for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
