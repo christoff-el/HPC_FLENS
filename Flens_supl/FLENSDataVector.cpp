@@ -63,7 +63,7 @@ template <>
 void
 FLENSDataVector<FLvTypeI>::typeII_2_I()
 {
-
+	std::cout<<"hi"<<std::endl;
 	//Sum up values at cross points:
 	commCrossPoints();
 
@@ -190,6 +190,7 @@ FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
 namespace flens{ namespace blas{
 
 //Overloaded copy, so that when copying typeII->I, we also apply the appropriate type conversion:
+template <typename>
 void
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
@@ -210,6 +211,7 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 }
 
 //Overloaded dot - performs appropriate communication:
+template <typename>
 double
 dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 {
@@ -232,6 +234,7 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 }
 
 //Adds commutativity to dot:
+template <typename>
 double
 dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
 {

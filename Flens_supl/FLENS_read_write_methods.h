@@ -34,4 +34,4 @@ write(flens::DenseVector<flens::Array<ElementType> > &DVector, std::string filen
 }; // namespace flens
 
 #include "FLENS_read_write_methods.cpp"
-#endif // FLENS_READ_WRITE_METHODS_H
+#endif	// FLENS_READ_WRITE_METHODS_H

@@ -39,9 +39,9 @@ gs_mpi_blas.o: gs_mpi_blas.cpp gs_mpi_blas.h
 wrappers.o: FLENSDataVector.o funk2flens.o flens2funk.o gs_mpi_blas.o gs_nompi_blas.o cg_mpi_blas.o cg_nompi_blas.o wrappers.cpp wrappers.h
 	$(CC) $(CPPFLAGS)  wrappers.cpp
 FLENS_read_write_methods.o: FLENS_read_write_methods.cpp FLENS_read_write_methods.h
-	$(CC) $(CPPFLAGS) FLENS_read_write_methods.cpp
+	$(CC) $(CPPFLAGS)  FLENS_read_write_methods.cpp
 CRS_sort.o: CRS_sort.cpp CRS_sort.h
-	$(CC) $(CPPFLAGS) CRS_sort.cpp 
+	$(CC) $(CPPFLAGS)  CRS_sort.cpp 
 
 flens_supl.a: FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o wrappers.o FLENS_read_write_methods.o CRS_sort.o
 	ar rcu libFlens.a FLENSDataVector.o flens2funk.o funk2flens.o cg_nompi_blas.o cg_mpi_blas.o gs_nompi_blas.o gs_mpi_blas.o wrappers.o FLENS_read_write_methods.o CRS_sort.o
