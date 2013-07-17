@@ -10,12 +10,15 @@ int
 gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max())
 {
+
 	using namespace flens;
 
-    typedef typename VB::ElementType  		ElementType;
-    typedef typename VB::IndexType    		IndexType;
-    typedef VB				    			VectorType;
-    typedef DenseVector<Array<IndexType> >	IVector;
+    typedef typename VB::ElementType  			ElementType;
+    typedef typename VB::IndexType    			IndexType;
+    typedef FLENSDataVector<FLvTypeI>			VectorTypeI;
+    typedef FLENSDataVector<FLvTypeII>			VectorTypeII;
+    typedef DenseVector<Array<IndexType> >		IVector;
+    typedef DenseVector<Array<ElementType> >	EVector;
 
     const Underscore<IndexType> _; // FLENS operator (range access)
 
@@ -23,7 +26,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
   	// GS_MPI starts here
   	// First resort indices
-    IndexType numNodes=x.length();
+    IndexType numNodes = x.length();
     
     /* Step 0.1:
      *    Build index vectors for 
@@ -33,7 +36,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      */
     
     // cross point are listed first
-    int nV=coupling.local2globalCrossPoints.length();
+    int nV = coupling.local2globalCrossPoints.length();
     IVector indexV(nV);
     for(IndexType k=1; k<=nV; ++k)
     {
@@ -53,6 +56,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
          nE += coupling.boundaryNodes[k].length()-2;
     }
+    
     IVector indexE(nE);
     for(int k=0; k<coupling.numCoupling; ++k)
     { 
@@ -69,6 +73,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
         innerNodes(bc(k)) = 1;
     }
+    
     // count inner nodes
     IndexType nI=0;
     for(IndexType j=nV+1; j<=numNodes; ++j)
@@ -76,7 +81,6 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         if(innerNodes(j)==0) ++nI;
     }
 
-        
     IVector indexI(nI);
     counter=1;
     for(IndexType j=nV+1; j<=numNodes; ++j)
@@ -96,9 +100,10 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      */
     
     // set local values for A_EE and A_VV
-    FLENSDataVector diag(numNodes, coupling, flens::typeII);
-    VectorType subdiag(nE);
+    VectorTypeI diag(numNodes, coupling);
+    EVector subdiag(nE);
     IndexType idxk;
+    
     // set values at diagonal
     for(IndexType k=1; k<=numNodes; ++k)
     {
@@ -108,6 +113,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     // Now global values: 
     // a) communication for diagonal 
     diag.typeII_2_I();
+    
     // b) communication for subdiagonal
     int offset=0;
     for (int j=0; j<coupling.numCoupling; ++j)
@@ -118,48 +124,66 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                 IndexType numBdryNodes = coupling.boundaryNodes[j].length()-2;
                 // only communicate if there are more than 1 boundary nodes on coupling boundary (no cross Points!)
                 if(numBdryNodes>1){
-  
-                    IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
+
+                	IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
                   
-                    VectorType u_send1(numBdryNodes-1);
-                    VectorType u_recv1(numBdryNodes-1);
+                    EVector u_send1(numBdryNodes-1);
+                    EVector u_recv1(numBdryNodes-1);
+/*=======
+                    IVector sendIndex(numBdryNodes);
+
+                    assert(numBdryNodes<=sendIndex.length());
+					memcpy(sendIndex.data(), coupling.boundaryNodes[j].data()+1,
+														numBdryNodes*sizeof(int));
+
+                  	//  typename IVector::View  sendIndex(numBdryNodes, coupling.boundaryNodes[j].data()+1); 
+                    
+                    EVector u_send1(numBdryNodes-1);
+                    EVector u_recv1(numBdryNodes-1);
+                    
+>>>>>>> vec12*/
                     // set local values
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
                         u_send1(k) =  A(sendIndex(k+1), sendIndex(k));
                     }
+                    
                     // get values from other processes
                     MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j+1)-1, 0,
-                                   u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j+1)-1, 0);
+							               coupling.neighbourProcs(j+1)-1, 0,
+                            		       u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
+                                		   coupling.neighbourProcs(j+1)-1, 0);
+
                     // add values from other processes (!! numbering is opposite !!)
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
                         subdiag(k+offset) =  u_send1(k) + u_recv1(numBdryNodes-k);
                     }
                 }
-                offset+=numBdryNodes;
+                offset += numBdryNodes;
             }
         }
     }    
+    
     // extract matrices A_VV and  A_EE
-    VectorType A_VV(nV), A_EE_diag(nE), A_EE_udiag(nE), A_EE_ldiag(nE);
+    EVector A_VV(nV), A_EE_diag(nE), A_EE_udiag(nE), A_EE_ldiag(nE);
     for(IndexType k=1; k<=nV; ++k)
     {
         A_VV(k) = diag(k);
     }
     for(IndexType k=1; k<=nE; ++k)
     {
-        idxk=indexE(k);
+        idxk = indexE(k);
         A_EE_diag(k) = diag(idxk);
     }
+    
     /* 
      * Start iteration  
      */
      
     // initialize residual 
-    FLENSDataVector r(numNodes, coupling, flens::nonMPI);
+    VectorTypeI r(numNodes, coupling);
+    
     // set x to zero at fixed nodes
     for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
@@ -167,7 +191,10 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
     // set bdryNodes vector as we only solve at free nodes! 
     IVector bdryNodes(numNodes-nI);
-    for(IndexType k=1; k<=nV; ++k) bdryNodes(k) = k;
+    for(IndexType k=1; k<=nV; ++k) {
+    	bdryNodes(k) = k;
+    }
+    
     counter=nV+1;
     for(IndexType k=nV+1; k<=numNodes; ++k)
     {
@@ -197,6 +224,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                 r(k) =  b(k) - tmp2;
             }        
         }
+        
         /* Step 1.2:
          *    Communicate with other proceses
          *    to compute typeI residual (w_V),
@@ -211,6 +239,7 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         {
             x(k) += r(k)/diag(k);
         }  
+        
         /* Step 2.1:
          *    Calculate residual on boundary nodes 
          *    r_E = b_E - A_EV*x_V - A_EE*x_E - A_EI * x_I
@@ -238,9 +267,10 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *      - compute A_EE^-1*rE
          *      - update x
          */
-          
+        
         // Computation of A_EE^-1*rE:
-        VectorType xE(nE), rE(nE);
+        EVector xE(nE), rE(nE);
+        
         //  a) copy subdiagonals (as they are changed in solveTridiag)
 
 		A_EE_ldiag(_(1,nE-1)) = subdiag(_(1,nE-1));
@@ -251,14 +281,16 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         {
              rE(k) =  r(indexE(k));
         }
+        
         //  c) invoke tridiagonal solver
-        solveTridiag(A_EE_ldiag, A_EE_diag, A_EE_udiag,xE,rE);
+        solveTridiag(A_EE_ldiag, A_EE_diag, A_EE_udiag, xE, rE);
         
         // Update x at boundary nodes
         for(IndexType k=1; k<=nE; ++k)
         { 
             x(indexE(k)) += xE(k);    
         }
+        
         /* Step 3:
          *    Calculate x on inner nodes: 
          *    Gauß-Seidel step in forward direction (only at FREE NODES)
@@ -292,17 +324,19 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
     typedef typename VB::ElementType                ElementType;
     typedef typename VB::IndexType                  IndexType;
-    typedef VB                                      VectorType;
-    typedef DenseVector<Array<IndexType> >          IVector;
+    typedef FLENSDataVector<FLvTypeI>				VectorTypeI;
+    typedef FLENSDataVector<FLvTypeII>				VectorTypeII;
+    typedef DenseVector<Array<IndexType> >			IVector;
+    typedef DenseVector<Array<ElementType> >		EVector;
 
-    const Underscore<IndexType> _; // FLENS operator (range access)
+    const Underscore<IndexType> _; 	// FLENS operator (range access)
 
     ElementType Zero(0);
     const Coupling &coupling = b.coupling;
 
     // GS_MPI starts here
     // First resort indices
-    IndexType numNodes=x.length();
+    IndexType numNodes = x.length();
     
     /* Step 0.1:
      *    Build index vectors for 
@@ -332,6 +366,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
          nE += coupling.boundaryNodes[k].length()-2;
     }
+    
     IVector indexE(nE);
     for(int k=0; k<coupling.numCoupling; ++k)
     { 
@@ -348,6 +383,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
         innerNodes(bc(k)) = 1;
     }
+    
     // count inner nodes
     IndexType nI=0;
     for(IndexType j=nV+1; j<=numNodes; ++j)
@@ -355,7 +391,6 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         if(innerNodes(j)==0) ++nI;
     }
 
-        
     IVector indexI(nI);
     counter=1;
     for(IndexType j=nV+1; j<=numNodes; ++j)
@@ -375,17 +410,17 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
      */
     
     // set local values for A_EE and A_VV
-    FLENSDataVector diag(numNodes, coupling, flens::typeII);
-    VectorType subdiag(nE);
+    VectorTypeI diag(numNodes, coupling);
+    EVector subdiag(nE);
     IndexType idxk;
 
     // Access values of A
     const auto &_rows = A.engine().rows();
     const auto &_cols = A.engine().cols();
     const auto &_vals = A.engine().values();
-
+	
+	// set values at diagonal
     ElementType Akk = Zero;
-    // set values at diagonal
     for(IndexType k=1; k<=numNodes; ++k)
     {
         // Locate value
@@ -404,6 +439,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     // Now global values: 
     // a) communication for diagonal 
     diag.typeII_2_I();
+    
     // b) communication for subdiagonal
     int offset=0;
     for (int j=0; j<coupling.numCoupling; ++j)
@@ -417,8 +453,9 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                     
                     IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
                     
-                    VectorType u_send1(numBdryNodes-1);
-                    VectorType u_recv1(numBdryNodes-1);
+                    EVector u_send1(numBdryNodes-1);
+                    EVector u_recv1(numBdryNodes-1);
+                    
                     // set local values
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
@@ -431,25 +468,28 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                                 Akk = _vals(it);
                             }
                         }
-                        u_send1(k) =  Akk;
+                        u_send1(k) = Akk;
                     }
+                    
                     // get values from other processes
                     MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j+1)-1, 0,
-                                   u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   coupling.neighbourProcs(j+1)-1, 0);
+                                   			coupling.neighbourProcs(j+1)-1, 0,
+                                   			u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
+                                   			coupling.neighbourProcs(j+1)-1, 0);
+
                     // add values from other processes (!! numbering is opposite !!)
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
-                        subdiag(k+offset) =  u_send1(k) + u_recv1(numBdryNodes-k);
+                        subdiag(k+offset) = u_send1(k) + u_recv1(numBdryNodes-k);
                     }
                 }
-                offset+=numBdryNodes;
+                offset += numBdryNodes;
             }
         }
     }    
+    
     // extract matrices A_VV and  A_EE
-    VectorType A_VV(nV), A_EE_diag(nE), A_EE_udiag(nE), A_EE_ldiag(nE);
+    EVector A_VV(nV), A_EE_diag(nE), A_EE_udiag(nE), A_EE_ldiag(nE);
     for(IndexType k=1; k<=nV; ++k)
     {
         A_VV(k) = diag(k);
@@ -459,12 +499,14 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         idxk=indexE(k);
         A_EE_diag(k) = diag(idxk);
     }
+    
     /* 
      * Start iteration  
      */
      
     // initialize residual 
-    FLENSDataVector r(numNodes, coupling, flens::nonMPI);
+    VectorTypeI r(numNodes, coupling);
+    
     // set x to zero at fixed nodes
     for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
@@ -502,6 +544,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                 r(k) =  b(k) - tmp2;
             }        
         }
+        
         /* Step 1.2:
          *    Communicate with other proceses
          *    to compute typeI residual (w_V),
@@ -515,7 +558,8 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         for(IndexType k=1; k<=nV; ++k)
         {
             x(k) += r(k)/diag(k);
-        }  
+        }
+        
         /* Step 2.1:
          *    Calculate residual on boundary nodes 
          *    r_E = b_E - A_EV*x_V - A_EE*x_E - A_EI * x_I
@@ -543,19 +587,21 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
          *      - compute A_EE^-1*rE
          *      - update x
          */
-          
+        
         // Computation of A_EE^-1*rE:
-        VectorType xE(nE), rE(nE);
+        EVector xE(nE), rE(nE);
+        
         //  a) copy subdiagonals (as they are changed in solveTridiag)
-
         A_EE_ldiag(_(1,nE-1)) = subdiag(_(1,nE-1));
         A_EE_udiag(_(1,nE-1)) = subdiag(_(1,nE-1));
+
 
         //  b) set right hand side
         for(IndexType k=1; k<=nE; ++k)
         {
              rE(k) =  r(indexE(k));
         }
+        
         //  c) invoke tridiagonal solver
         solveTridiag(A_EE_ldiag, A_EE_diag, A_EE_udiag,xE,rE);
         
@@ -564,6 +610,7 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         { 
             x(indexE(k)) += xE(k);    
         }
+        
         /* Step 3:
          *    Calculate x on inner nodes: 
          *    Gauß-Seidel step in forward direction (only at FREE NODES)
@@ -592,11 +639,11 @@ void
 solveTridiag(V &ldiag, V &diag, V &udiag, V &x, V &b)
 {
 	using namespace flens;
-	typedef typename V::ElementType  		ElementType;
-    typedef typename V::IndexType    		IndexType;
+	
+	typedef typename V::IndexType		IndexType;
 
 	/* *** Thomas algorithm to solve tridiagonal system */ 
-	IndexType n=diag.length();
+	IndexType n = diag.length();
 	if(n==1) x(1) = b(1)/diag(1);
 	else
 	{

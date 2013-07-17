@@ -38,9 +38,11 @@ int main(int argc, char *argv[]){
 	mesh.refineRed();
   
   	cout << "Survived mesh" << endl;
+  	
     /* *** create fem object and assemble linear system */
-    FEM fem(mesh, f, DirichletData,NeumannData);
+    FEM<flens::MethNonMPI> fem(mesh, f, DirichletData, NeumannData);
     cout << "Survived fem" << endl;
+
 
     fem.assemble();
     cout << "Survived assemble" << endl;
@@ -49,12 +51,14 @@ int main(int argc, char *argv[]){
     //CRSMatrix A = fem.getA(); <------------- Segmentation Fault!!!
     //A.writeFull("./output/A_serial.txt");
 
-	DataVector b = fem.getb();
+	auto b = fem.getb();
 	b.writeData(0,"./output/b_serial");
 	
-	/* *** solve problem using the cg method */
-    fem.solve(cg);
-	
+	/* *** solve problem using specified method */
+    fem.solve(gs);
+	//fem.solve(cg);
+
+
 	fem.writeSolution();
 	
 	

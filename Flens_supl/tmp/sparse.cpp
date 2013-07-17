@@ -5,17 +5,29 @@
 using namespace flens;
 using namespace std;
 
+class FLvNonMPI;
+class FLvTypeI;
+class FLvTypeII;
 
+class MethMPI {
+public:	
+	typedef FLvTypeI  I;
+	typedef FLvTypeII II;
+	
+};
+
+
+template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
 	typedef double	ElementType;
     typedef int   	IndexType;
 
-	explicit
-	FLENSDataVector(int n)
-		:	DenseVector<Array<double> >(n)
-		{}
+
+
+
+	FLENSDataVector(int n,FLENSDataVector<>* m);	
 		
 	explicit
 	FLENSDataVector(FLENSDataVector &rhs)
@@ -25,19 +37,31 @@ struct FLENSDataVector
 	//DenseVector<Array<double> > vals;
     int uhoh=1;
     
-    	
-    
-    
-    
 
 
 };
 
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n, FLENSDataVector<>*)
+	:	DenseVector<Array<double> >(n)
+{
+	cout<<"default"<<endl;
+}
 
+template<>
+FLENSDataVector<FLvTypeI>::FLENSDataVector(int n, FLENSDataVector<>* m)
+	:	DenseVector<Array<double> >(n)
+{
+	cout<<"special"<<endl;
+	//if (m==NULL){
+	//cerr<<"No coupling"<<endl;exit(1);}
+	//int j=m->uhoh;
+	//assert(m != NULL);
+	}
 
 namespace flens {namespace blas {
 void
-copy(FLENSDataVector &a, FLENSDataVector &b){
+copyer(FLENSDataVector<FLvTypeI> &a, FLENSDataVector<FLvTypeII> &b){
 cout<<"Hahaha"<<endl;
 
 //DenseVector<Array<double> > *tmpa = &a;
@@ -52,7 +76,27 @@ int main() {
     typedef IndexBaseZero<IndexType>                         IndexBase;
     typedef CoordStorage<double, CoordRowColCmp, IndexBase>  Coord;
     
-    FLENSDataVector b(5);
+    int t=1;
+    FLENSDataVector<>* i;
+    FLENSDataVector<MethMPI::I> a(5,i);
+    a(1)=99;
+    FLENSDataVector<FLvTypeII> b(5,i);
+    b(2)=101;
+    flens::blas::copyer(a,b);
+    
+    cout<<a<<endl;
+    cout<<b<<endl;
+    
+    DenseVector<Array<double> > g(5);
+    //g(1) = 767;
+    //cout<<g<<endl;
+    //const double &g5 = g.engine().data();
+    double *g5 = new double[5];
+    g5[0]=1;
+    g5[4]=123;
+    //g.engine().data()=&g5;
+    cout << g<<endl;
+    /*FLENSDataVector b(5);
     b(2)=99;
     b(3)=1;
     
@@ -85,7 +129,7 @@ int main() {
 	p(5) = 101;
 	cout << p.length() << " " << p(5) << endl;
 	p.resize(10);
-	cout << p(5) << " " << p(6) << endl;
+	cout << p(5) << " " << p(6) << endl;*/
 	
 	
 	//cout << a.sayHi(1) << endl;
