@@ -4,6 +4,7 @@
 #include <flens/flens.cxx>
 #include <vector>
 #include <math.h>
+#include <type_traits>
 
 
 #include "../Flens_supl/FlensHeader.h"

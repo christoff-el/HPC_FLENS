@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
         sizes(3) =  neumann.numRows();
         sizes(4) =  elements2procs.length();
         sizes(5) =  skeleton.numRows();
-for (int i=0;i<6;++i){cout<<sizes(i)<<endl;}
+
          MPI::COMM_WORLD.Bcast(sizes.data(), 6, MPI::INT, 0);
          
     } else {
@@ -77,8 +77,9 @@ for (int i=0;i<6;++i){cout<<sizes(i)<<endl;}
     FEM<flens::MethMPI> fem(mesh, f, DirichletData,NeumannData); 
 
     fem.assemble();
-    fem.solve(cg);
-    //fem.solve(gs);
+    
+    //fem.solve(cg);
+    fem.solve(gs);
     
 	fem.writeSolution(rank);
     

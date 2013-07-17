@@ -20,7 +20,6 @@ int
 gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
    int    maxIterations = std::numeric_limits<int>::max());
    
-
 // TriDiag Solver
 template <typename V>
 void

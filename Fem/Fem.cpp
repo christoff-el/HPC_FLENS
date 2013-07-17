@@ -254,7 +254,8 @@ FEM<METH>::solve(Solver method)
     if (method == cg) {
     	
     	//Serial solver:
-        if (!_mesh.distributed()) {
+        //if (!_mesh.distributed()) {
+        if (std::is_same<METH, flens::MethNonMPI>::value) {
             it = cg_nompi_blas(fl_A ,fl_b, fl_u, fixedNodes, maxIt, tol);
         }
         
@@ -270,13 +271,13 @@ FEM<METH>::solve(Solver method)
     	
     	
     	//Serial solver:
-		if (!_mesh.distributed()) {
-			//it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
+		if (std::is_same<METH, flens::MethNonMPI>::value) {
+			it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			//it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
+			it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
 		}
 		
 	}
@@ -295,7 +296,6 @@ FEM<METH>::solve(Solver method)
         std::cout <<std::endl<< "Iterations: "<<it<< "  , MaxIterations:  "<<maxIt<<std::endl;
 
 	}
-	
 	
     /*** Update Dirichlet data (x is set to zero at dirichlet nodes in solving methods) ***/
     _updateDirichlet();
