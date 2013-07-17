@@ -5,7 +5,7 @@
 #include <string>
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
-#include "Mesh.hpp"
+#include "Coupling.hpp"
 
 
 enum vectorType { typeI, typeII, nonMPI};

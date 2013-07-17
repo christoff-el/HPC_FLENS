@@ -5,7 +5,6 @@
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "FLENSDataVector.h"
-
 #include "../Fem/DataVector.hpp"
 
 //Funken CRSMatrix --> FLENS CRS Matrix:
