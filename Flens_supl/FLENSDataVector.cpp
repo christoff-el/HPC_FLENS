@@ -5,29 +5,78 @@
 
 namespace flens{
 
+
+//Non-MPI --> Restricted to only FLnonMPI specialisation.
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n)
+	:	coupling(Coupling())
+{
+	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
+						//		e.g. if FLENSDataVector<double> instantiated.
+}
+
+template <>
+FLENSDataVector<FLvNonMPI>::FLENSDataVector(int n)
+	: 	DenseVector<Array<double> >(n),
+		coupling(Coupling())
+{
+	//Permits instatiation of FlNonMPI specialisation.
+}
+
+
+//MPI --> Restricted to only FLvTypeI, FLvTypeII specialisations. 
+//				FLvNonMPI is permitted, but supplied 
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	coupling(Coupling())
+{
+	VTYPE::CHK;			//<-- If scope ever reaches here, compilation will fail.
+						//		e.g. if FLENSDataVector<double> instantiated.
+}
+
+template <>
+FLENSDataVector<FLvTypeI>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	DenseVector<Array<double> >(n),
+		coupling(_coupling)
+{
+	//Permits instatiation of FlvTypeI specialisation.
+}
+
+template <>
+FLENSDataVector<FLvTypeII>::FLENSDataVector(int n, const Coupling &_coupling)
+	:	DenseVector<Array<double> >(n),
+		coupling(_coupling)
+{
+	//Permits instatiation of FlvTypeII specialisation.
+}
+	
+	
+//Copy constructor (VTYPEs obligated to match):
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(const FLENSDataVector<VTYPE> &rhs)
+   	:	DenseVector<Array<double> >(rhs),			//copy data via flens framework
+		coupling(rhs.coupling)
+{
+}
+
+template <>	
 void
-FLENSDataVector::typeII_2_I()
+FLENSDataVector<FLvTypeI>::typeII_2_I()
 {
 
-	assert(vType==typeII);
-	
 	//Sum up values at cross points:
 	commCrossPoints();
 
 	//Sum up values at boundary nodes:
 	commBoundaryNodes();
-	
-	//Update VectorType:
-	vType = typeI;
 
 }
 
+template <>
 void
-FLENSDataVector::typeI_2_II()
+FLENSDataVector<FLvTypeI>::typeI_2_II()
 {
 
-	assert(vType == typeI);
-	
 	//Divide values at cross points by the number of processes:
 	for (int i=1; i<=coupling.local2globalCrossPoints.length(); ++i) {
 		(*this)(i) /= coupling.crossPointsNumProcs(i);
@@ -39,44 +88,37 @@ FLENSDataVector::typeI_2_II()
 			(*this)(coupling.boundaryNodes[i](j)) /= 2.;
 		}
 	}
-	
-	//Update type:
-	vType = typeII;
 
 }
 
+template <typename VTYPE>
 void
-FLENSDataVector::commCrossPoints()
+FLENSDataVector<VTYPE>::commCrossPoints()
 {
-	
-	FLENSDataVector u_crossPoints(coupling.numCrossPoints);
 
+	DenseVector<Array<double> > u_crossPoints(coupling.numCrossPoints);
+	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
+	
 	//Local values at all global cross points:
 	for (int i=1; i<=coupling.local2globalCrossPoints.length(); ++i) {
 		u_crossPoints(coupling.local2globalCrossPoints(i)) = (*this)(i);
 	}
 
-	double *u_crossPoints_tr = u_crossPoints.vec2c();
-	
-	//std::cout<<u_crossPoints_tr[1]<<std::endl;
-	double *u_crossPoints_gl = new double[coupling.numCrossPoints];
-	 
 	/*** MPI Communication for global cross points ***/
-	MPI::COMM_WORLD.Allreduce(u_crossPoints_tr, u_crossPoints_gl, coupling.numCrossPoints,
-										MPI::DOUBLE, MPI::SUM);
+	MPI::COMM_WORLD.Allreduce(u_crossPoints.data(),
+						      u_crossPoints_gl.data(),
+							  coupling.numCrossPoints,
+							  MPI::DOUBLE, MPI::SUM);
 
 	for (int i=1; i<=coupling.local2globalCrossPoints.length(); ++i) {
-		(*this)(i) = u_crossPoints_gl[coupling.local2globalCrossPoints(i)-1];
+		(*this)(i) = u_crossPoints_gl(coupling.local2globalCrossPoints(i));
 	}
-
-	delete[] u_crossPoints_tr;
-	delete[] u_crossPoints_gl;
 
 }
 
-
+template <typename VTYPE>
 void 
-FLENSDataVector::commBoundaryNodes()
+FLENSDataVector<VTYPE>::commBoundaryNodes()
 {
 
 	for (int i=1; i<=coupling.maxColor; ++i) {
@@ -86,95 +128,97 @@ FLENSDataVector::commBoundaryNodes()
 				//Only communicate if there is a boundary node on coupling boundary (no cross points):
 				int sendLength = coupling.boundaryNodes[j].length()-2;
 
-				DenseVector<Array<int> > sendIndex(sendLength);
-				for (int k=1; k<=sendLength; ++k) {					//copy manually until we can use blas::copy
-					sendIndex(k) = coupling.boundaryNodes[j](k+1);
-				}
+				DenseVector<Array<double> > u_send(sendLength);
+				DenseVector<Array<double> > u_recv(sendLength);
 
-				double *u_send = new double[sendLength];
-				double *u_recv = new double[sendLength];
 				
-				//Set local values:
-				for (int k=0; k<sendLength; ++k) {
-					u_send[k] = (*this)(sendIndex(k+1));
+				//Set local values to be sent:
+				for (int k=1; k<=sendLength; ++k) {
+					u_send(k) = (*this)(coupling.boundaryNodes[j](k+1));
 				}
 
 				//Get values from other processes:
-				MPI::COMM_WORLD.Sendrecv(u_send, sendLength, MPI::DOUBLE, coupling.neighbourProcs(j+1)-1, 0,
-											u_recv, sendLength, MPI::DOUBLE, coupling.neighbourProcs(j+1)-1,0);
+				MPI::COMM_WORLD.Sendrecv(u_send.engine().data(), sendLength, MPI::DOUBLE, 
+											coupling.neighbourProcs(j+1)-1, 0,
+											u_recv.engine().data(), sendLength, MPI::DOUBLE, 
+											coupling.neighbourProcs(j+1)-1,0);
 				
-				//Add values from other processes (!!numbering is opposite):
+				//Add values collected from the other processes (!!numbering is opposite):
 				for (int k=0; k<sendLength; ++k) {
-					(*this)(sendIndex(k+1)) += u_recv[sendLength-k-1];
+					(*this)(coupling.boundaryNodes[j](k+2)) += u_recv(sendLength-k);
 				}
-
-				delete[] u_send;
-				delete[] u_recv;
 			}
 		}
   	}    
 
 }
 
-double*
-FLENSDataVector::vec2c()
+template <typename VTYPE>
+void 
+FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
 {
 
-	double *cVec = new double[(*this).length()];
+    std::string strproc;
+  
+    if (proc==0)  strproc="";
+    else {
+    	std::stringstream ss;
+    	ss << proc;
+    	strproc = ss.str();
+    }
+    
+    filename = filename + strproc + ".dat";
+
+	std::fstream f;
 	
-	//Copy FLENS vector to C array:
-	for (int i=1; i<=(*this).length(); ++i) {
+	f.open(filename.c_str(), std::ios::out);
+	if (f.is_open()){
 	
-		cVec[i-1] = (*this)(i);
-	
+		for (int i=1; i<=(*this).length(); ++i) {
+			f << (*this)(i) << std::endl;
+		}
+		
+		f.close();
+		
 	}
-
-	return cVec;
-
+    
 }
 
 }	//namespace flens
 
+
 namespace flens{ namespace blas{
 
-//Overloaded copy, so that vector type data also added:
+//Overloaded copy, so that when copying typeII->I, we also apply the appropriate type conversion:
 void
-copy(FLENSDataVector &orig, FLENSDataVector &dest) 
+copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
 	
 	//Create pointers that upcast FLENSDataVector to Parent DenseVector:
-	DenseVector<Array<double> > *tmpOrig = &orig;
-	DenseVector<Array<double> > *tmpDest = &dest;
+	//DenseVector<Array<double> > *tmpOrig = &orig;
+	//DenseVector<Array<double> > *tmpDest = &dest;
 	
 	//Copy data as usual (masquerading as a DenseVector :) ):
-	blas::copy(*tmpOrig, *tmpDest);
+	//blas::copy(*tmpOrig, *tmpDest);
+	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
+			   *static_cast<DenseVector<Array<double> > *>(&dest));
 
-	//Transfer vector type:
-	dest.vType = orig.vType;
-
+	//Perform vector type conversion:
+	dest.typeII_2_I();
 	//(coupling can't be transferred)
 }
 
-//Overloaded dot, for communication:
+//Overloaded dot - performs appropriate communication:
 double
-dot(FLENSDataVector &x1, FLENSDataVector &x2)
+dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 {
 
 	//Upcast to DenseVector, and use the standard blas::dot:
 	//DenseVector<Array<double> > *tmpx1 = &x1;
 	//DenseVector<Array<double> > *tmpx2 = &x2;
-		
-	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1), *static_cast<DenseVector<Array<double> > *>(&x2));
 	
-	//If no communication is required, then we are done:
-	if (x1.vType==nonMPI && x2.vType==nonMPI) {
-		return value;
-	}
-	
-	//If communication is required..:
-	
-	//We only multiply typeI with typeII:
-	assert(x1.vType != x2.vType);
+	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1),
+	                         *static_cast<DenseVector<Array<double> > *>(&x2));
 	
 	//Receive buffer:
 	double buf = 0;
@@ -186,25 +230,13 @@ dot(FLENSDataVector &x1, FLENSDataVector &x2)
 
 }
 
-//Overloaded mv, for type updating:
-void
-mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector &x, const double &beta, FLENSDataVector &y) {
+//Adds commutativity to dot:
+double
+dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
+{
 	
-	//Make sure we have the right vector type x:
-	assert(x.vType==nonMPI || x.vType==typeI);
+	return dot(x2,x1);
 	
-	//Update y type based on x type:
-	if (x.vType == nonMPI) {
-		y.vType = nonMPI;
-	}
-	else {
-		y.vType = typeII;
-	}
-	
-	//Use standard blas::mv:
-	blas::mv(NoTrans, alpha, A, *static_cast<DenseVector<Array<double> > *>(&x), beta, *static_cast<DenseVector<Array<double> > *>(&y));
-		
 }
 
 

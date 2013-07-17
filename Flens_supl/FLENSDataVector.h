@@ -9,55 +9,48 @@
 
 namespace flens{
 
-enum VectorType {typeI, typeII, nonMPI};
+class FLvNonMPI;
+class FLvTypeI;
+class FLvTypeII;
 
+struct MethMPI {
+	typedef FLvTypeI  I;
+	typedef FLvTypeII II;
+};
+
+struct MethNonMPI {
+	typedef FLvNonMPI I;
+	typedef FLvNonMPI II;
+};
+
+template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
 	typedef double	ElementType;
     typedef int   	IndexType;
 
-	//MPI Version (with Coupling, requires VectorType):
-	explicit
-	FLENSDataVector(int n, const Coupling &_coupling, const VectorType _vType)
-    	: 	DenseVector<Array<double> >(n),
-        	vType(_vType),
-        	coupling(_coupling)
-	{
-	}
+	//Non-MPI constructor:
+	FLENSDataVector(int n);
+	
+	//MPI constructor:
+	FLENSDataVector(int n, const Coupling &_coupling);
     
-	//Non-MPI version (no coupling, assumes 'nonMPI' VectorType):
-	explicit
-	FLENSDataVector(int n)
-    	:	DenseVector<Array<double> >(n),
-    		coupling(Coupling())
-	{
-    	vType = nonMPI;
-	}
-    
-	//Copy constructor:
-	explicit
-	FLENSDataVector(const FLENSDataVector &rhs)
-    	:	DenseVector<Array<double> >(rhs),		//copy data via flens framework
-    		vType(rhs.vType),
-			coupling(rhs.coupling)
-	{
-	}
-    
+	//Copy constructor (VTYPEs obligated to match):
+	FLENSDataVector(const FLENSDataVector<VTYPE> &rhs);
+	    
 
 	//Member objects:
-    VectorType vType;
 	const Coupling &coupling;
 
 	//Member methods:
-	void typeII_2_I();
-	void typeI_2_II();
+	void typeII_2_I();				// <-- applies conversion within a TypeI	(data already copied).
+	void typeI_2_II();				// <-- applies conversion within a TypeII
 	
 	void commCrossPoints();
 	void commBoundaryNodes();
 	
-	double* vec2c();
-	
+	void writeData(int proc, std::string filename);
 
 };
 
@@ -66,18 +59,19 @@ struct FLENSDataVector
 namespace flens{ namespace blas{
 
 void 
-copy(FLENSDataVector &orig, FLENSDataVector &dest);
+copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest);
 
 double
-dot(FLENSDataVector &x1, FLENSDataVector &x2);
+dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2);
 
-void
-mv(Transpose trans, const double &alpha, const GeCRSMatrix<CRS<double, IndexOptions<int, 1> > > &A,
-		FLENSDataVector &x, const double &beta, FLENSDataVector &y);
+double
+dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2);
 
 
 }	//namespace blas
 }	//namespace flens
 
+
+#include "FLENSDataVector.cpp"
 
 #endif	//FLENS_DATA_VECTOR_H

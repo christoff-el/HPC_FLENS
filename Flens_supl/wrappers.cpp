@@ -6,7 +6,7 @@
 
 //Wrapper: Funken --> FLENS --> Funken
 int
-cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
+cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_b, Vector &fk_x, IndexVector &fk_bc,
 							int maxIt, double tol)
 {
 
@@ -28,7 +28,7 @@ cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &
 	//Solve using the FLENS-based CG solver:
 	int iterCount;
 	DenseVector fl_x(fl_b.length());
-	iterCount = cg_nompi_blas(fl_A, fl_x, fl_b, fk_bc, maxIt, tol);
+	iterCount = cg_nompi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
 
 	//Convert solution FLENS DenseVector x --> Funken Vector:
 	flens2funk_Vector(fl_x, fk_x);
@@ -37,9 +37,8 @@ cg_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &
 };
 
 
-
 int
-cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
+cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_b, DataVector &fk_x, IndexVector &fk_bc, 
 						int maxIt, double tol)
 {
     
@@ -56,15 +55,15 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 	funk2flens_CRSmat(fk_A, fl_A);
 
 	//Convert Funken DataVector b --> FLENS DenseVector:
-	flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
+	flens::FLENSDataVector<flens::FLvTypeII> fl_b(fk_b.values.length(), fk_b.coupling);
 	funk2flens_DataVector(fk_b, fl_b);
 		
 	/***Solve using the FLENS-based CG solver ***/
 	int iterCount;
 	
 	//x needs no MPI functionality, but we need attributes to copy to r1:
-	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
-	iterCount = cg_mpi_blas(fl_A, fl_x, fl_b, fk_bc, maxIt, tol);
+	flens::FLENSDataVector<flens::FLvTypeI> fl_x(fk_x.values.length(), fk_x.coupling);
+	iterCount = cg_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt, tol);
 
 	//Convert solution FLENSDataVector x --> Funken DataVector:
 	flens2funk_DataVector(fl_x, fk_x);
@@ -75,7 +74,7 @@ cg_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
 
 //Wrapper: Funken --> FLENS --> Funken
 int
-gs_dense_nompi_blas_wrapper(Matrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &fk_bc,
+gs_dense_nompi_blas_wrapper(Matrix &fk_A, Vector &fk_b, Vector &fk_x, IndexVector &fk_bc,
 							             int maxIt, double tol)
 {
   typedef int                                          IndexType;
@@ -139,7 +138,7 @@ gs_nompi_blas_wrapper(CRSMatrix &fk_A, Vector &fk_x, Vector &fk_b, IndexVector &
 
 //Wrapper: Funken --> FLENS >> GS >> FLENS --> Funken
 int
-gs_dense_mpi_blas_wrapper(Matrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
+gs_dense_mpi_blas_wrapper(Matrix &fk_A, DataVector &fk_b, DataVector &fk_x, IndexVector &fk_bc, 
 						              int maxIt)
 {
 	typedef int                                              IndexType;
@@ -155,14 +154,14 @@ gs_dense_mpi_blas_wrapper(Matrix &fk_A, DataVector &fk_x, DataVector &fk_b, Inde
 	funk2flens_mat(fk_A, fl_A);
 
 	//Convert Funken DataVector b --> FLENS DenseVector:
-	flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
+	flens::FLENSDataVector<flens::FLvTypeII> fl_b(fk_b.values.length(), fk_b.coupling);
 	funk2flens_DataVector(fk_b, fl_b);
 		
 	/***Solve using the FLENS-based GS solver ***/
 	int iterCount;
 	
 	//Convert Funken DataVector x --> FLENS DenseVector:
-	flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
+	flens::FLENSDataVector<flens::FLvTypeI> fl_x(fk_x.values.length(), fk_x.coupling);
 	iterCount = gs_dense_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt);
 
 	//Convert solution FLENSDataVector x --> Funken DataVector:
@@ -173,7 +172,7 @@ gs_dense_mpi_blas_wrapper(Matrix &fk_A, DataVector &fk_x, DataVector &fk_b, Inde
 
 //Wrapper: Funken --> FLENS >> CG >> FLENS --> Funken
 int
-gs_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVector &fk_bc, 
+gs_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_b, DataVector &fk_x, IndexVector &fk_bc, 
                         int maxIt)
 {
     typedef int                                              IndexType;
@@ -189,14 +188,14 @@ gs_mpi_blas_wrapper(CRSMatrix &fk_A, DataVector &fk_x, DataVector &fk_b, IndexVe
     funk2flens_CRSmat(fk_A, fl_A);
 
     //Convert Funken DataVector b --> FLENS DenseVector:
-    flens::FLENSDataVector fl_b(fk_b.values.length(), fk_b.coupling, (flens::VectorType)fk_b.type);
+    flens::FLENSDataVector<flens::FLvTypeII> fl_b(fk_b.values.length(), fk_b.coupling);
     funk2flens_DataVector(fk_b, fl_b);
         
     /***Solve using the FLENS-based GS solver ***/
     int iterCount;
     
     //Convert Funken DataVector x --> FLENS DenseVector:
-    flens::FLENSDataVector fl_x(fk_x.values.length(), fk_x.coupling, (flens::VectorType)fk_x.type);
+    flens::FLENSDataVector<flens::FLvTypeI> fl_x(fk_x.values.length(), fk_x.coupling);
     iterCount = gs_mpi_blas(fl_A, fl_b, fl_x, fk_bc, maxIt);
 
     //Convert solution FLENSDataVector x --> Funken DataVector:

@@ -11,7 +11,8 @@
 #include <flens/flens.cxx> 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "Coupling.hpp"
-#include "../Flens_supl/FlensHeader.h"
+#include "../Flens_supl/CRS_sort.h"
+#include "../Flens_supl/FLENS_read_write_methods.h"
 
 typedef flens::GeMatrix<flens::FullStorage<double> > GeMatrix;
 typedef flens::GeMatrix<flens::FullStorage<int> > IMatrix;

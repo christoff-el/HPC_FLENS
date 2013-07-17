@@ -78,10 +78,11 @@ int main(int argc, char *argv[]){
     
     /* *** create fem object and assemble linear system*/
 
-    FEM fem(mesh, f, DirichletData,NeumannData);
+    FEM<flens::MethMPI> fem(mesh, f, DirichletData,NeumannData); 
 
     fem.assemble();
-    fem.solve(cg);
+
+    fem.solve(gs);
     
 	fem.writeSolution(rank);
     

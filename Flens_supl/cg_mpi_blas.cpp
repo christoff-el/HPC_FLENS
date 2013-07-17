@@ -15,11 +15,13 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
     typedef typename VB::ElementType  	ElementType;
     typedef typename VB::IndexType    	IndexType;
-    typedef VB				    		VectorType;
+    typedef VX							VectorTypeI;
+    typedef VB				    		VectorTypeII; 
 
 	//Initialise variables:
     ElementType  	alpha, beta, rdot, rdotOld;
-    VectorType   	Ap(x), p(x), r1(x), r2(b);	
+    VectorTypeI   	Ap(x), r1(x);
+    VectorTypeII	p(b),  r2(b);	
 
     const ElementType  Zero(0), One(1);
     
@@ -30,7 +32,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
     }
-    
+
     //Compute the residuals:
     //  p = A*x               ->  p is typeII
     //  r2 = b - A*x = b - p  -> r2 is typeII
@@ -44,11 +46,12 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     }
     
     /*** MPI: Initialise direction p (as typeI residual ) ***/
-    blas::copy(r2, r1);
-    r1.typeII_2_I();
-    //std::cout<<r1<<std::endl;
-    blas::copy(r1, p);
     
+    //Copy r2 to r1 - invokes II->I conversion:
+    blas::copy(r2, r1);
+    
+    //Copy r1 to p - I -> I uses standard copy:
+    blas::copy(r1, p);
     //Compute squared Norm of residuals, rdot = r*r:
     rdot = blas::dot(r1, r2);
 
@@ -68,17 +71,17 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         
         //Compute alpha = rdot/(p * Ap):
         alpha = rdot; 
-        alpha /= blas::dot(p, Ap);
+        alpha /= blas::dot(Ap, p);
         
         //Update solution x by x += alpha*p:
         blas::axpy(alpha, p, x);
         
-        //Update (local = typeII) residual by r -= alpha*Ap:
+        //Update local (= typeII) residual by r -= alpha*Ap:
         blas::axpy(-alpha, Ap, r2);
 
         /*** MPI: Get global (=type I) residual ***/
+        //Copy r2 to r1 - invokes II->I conversion:
         blas::copy(r2, r1);
-        r1.typeII_2_I();
         
         //Compute  squared Norm of updated residuum rdot = r*r:
         rdotOld = rdot;
