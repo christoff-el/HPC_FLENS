@@ -3,8 +3,6 @@
 
 #include "Fem.hpp"
 
-#include "Solver.hpp"
-
 /************************************************************************************************************/
 /************************************    constructor   ******************************************************/
 /************************************************************************************************************/
@@ -162,13 +160,16 @@ FEM<METH>::assemble()
     
     //Build FLENS CRS matrix from I, J, vals (rows, cols, values):
     flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(fl_uD.length(),fl_uD.length());
-    //, flens::CoordRowColCmp, flens::IndexBaseOne<int> 
+
+    // flens::CoordRowColCmp, flens::IndexBaseOne<int> 
     for (int i=1; i<=I.length(); ++i) {
-    
-    	fl_A_coord(I(i),J(i)) += val(i);
+
+        if (val(i)!=0) {
+            fl_A_coord(I(i),J(i)) += val(i);
+        }
     	
     }
-    
+
     fl_A = fl_A_coord;
 
 

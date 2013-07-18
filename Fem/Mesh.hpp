@@ -9,10 +9,9 @@
 #include <time.h>
 
 #include <flens/flens.cxx> 
-//#include "../Flens_supl/FlensHeader.h"
 #include "../Flens_supl/CRS_sort.h"
 #include "../Flens_supl/FLENS_read_write_methods.h"
-//#include "../LinearAlgebra/LinAlgHeader.hpp"
+
 #include "Coupling.hpp"
 
 

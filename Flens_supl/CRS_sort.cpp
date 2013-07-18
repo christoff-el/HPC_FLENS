@@ -101,6 +101,7 @@ CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values)
 	delete[] rowoff;
 };
 
+
 void
 CRS_insort(int * index, int* data, int length)
 {

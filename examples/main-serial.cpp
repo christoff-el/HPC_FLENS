@@ -27,25 +27,18 @@ int main(int argc, char *argv[]){
     /*** read the input data */
 	IMatrix elements, dirichlet, neumann;
 	GeMatrix coordinates;
-	cout << "Reading mesh" << endl;
 	readMesh(argv[1],coordinates, elements, dirichlet, neumann);
 	
 	/* *** create mesh */
-	cout << "Consturcting mesh" << endl;
 	Mesh mesh(coordinates, elements, dirichlet,neumann);
-	cout << "Refining" << endl;
 	mesh.refineRed();
 	mesh.refineRed();
   
-  	cout << "Survived mesh" << endl;
-  	
     /* *** create fem object and assemble linear system */
     FEM<flens::MethNonMPI> fem(mesh, f, DirichletData, NeumannData);
-    cout << "Survived fem" << endl;
 
 
     fem.assemble();
-    cout << "Survived assemble" << endl;
   
     /* *** write Galerkin matrix */
     //CRSMatrix A = fem.getA(); <------------- Segmentation Fault!!!
@@ -57,7 +50,6 @@ int main(int argc, char *argv[]){
 	/* *** solve problem using specified method */
     fem.solve(gs);
 	//fem.solve(cg);
-
 
 	fem.writeSolution();
 	

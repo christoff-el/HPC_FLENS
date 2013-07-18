@@ -120,11 +120,12 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                 IndexType numBdryNodes = coupling.boundaryNodes[j].length()-2;
                 // only communicate if there are more than 1 boundary nodes on coupling boundary (no cross Points!)
                 if(numBdryNodes>1){
-  
+
                     IVector sendIndex = coupling.boundaryNodes[j](_(2,numBdryNodes+1));
-                  
+
                     EVector u_send1(numBdryNodes-1);
                     EVector u_recv1(numBdryNodes-1);
+
                     // set local values
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {
@@ -132,10 +133,10 @@ gs_dense_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
                     }
                     // get values from other processes
                     MPI::COMM_WORLD.Sendrecv(u_send1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   			coupling.neighbourProcs(j+1)-1, 0,
-                                   			u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
-                                   			coupling.neighbourProcs(j+1)-1, 0);
-                                   			
+		                                   coupling.neighbourProcs(j+1)-1, 0,
+        		                           u_recv1.data() , numBdryNodes-1 , MPI::DOUBLE,
+                		                   coupling.neighbourProcs(j+1)-1, 0);
+
                     // add values from other processes (!! numbering is opposite !!)
                     for(IndexType k=1; k<=numBdryNodes-1; ++k)
                     {

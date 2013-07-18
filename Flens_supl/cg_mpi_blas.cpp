@@ -32,7 +32,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     for(int i=1; i<=bc.length(); ++i) {
           x(bc(i)) = 0;
     }
-    
+
     //Compute the residuals:
     //  p = A*x               ->  p is typeII
     //  r2 = b - A*x = b - p  -> r2 is typeII
@@ -52,7 +52,6 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     
     //Copy r1 to p - I -> I uses standard copy:
     blas::copy(r1, p);
-    
     //Compute squared Norm of residuals, rdot = r*r:
     rdot = blas::dot(r1, r2);
 

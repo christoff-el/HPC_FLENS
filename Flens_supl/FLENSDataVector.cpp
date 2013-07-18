@@ -2,7 +2,7 @@
 #define FLENS_DATA_VECTOR_CPP 1
 
 #include "FLENSDataVector.h"
-#include <iostream>
+
 namespace flens{
 
 
@@ -144,7 +144,7 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 				
 				//Add values collected from the other processes (!!numbering is opposite):
 				for (int k=0; k<sendLength; ++k) {
-					(*this)(coupling.boundaryNodes[j](k+1)) += u_recv(sendLength-k);
+					(*this)(coupling.boundaryNodes[j](k+2)) += u_recv(sendLength-k);
 				}
 
 			}
@@ -206,7 +206,6 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 
 	//Perform vector type conversion:
 	dest.typeII_2_I();
-
 	//(coupling can't be transferred)
 }
 
