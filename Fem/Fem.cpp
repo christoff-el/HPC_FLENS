@@ -332,11 +332,10 @@ FEM<METH>::refineRed()
 /*******************************  getter and write methods   **********************************/
 /**********************************************************************************************/
 template <typename METH>
-CRSMatrix 
+CRSMat 
 FEM<METH>::getA()
 {
-	//HACK Err.. Turn if off for now.
-  	return CRSMatrix();
+  	return fl_A;
 }
 
 template <typename METH>
