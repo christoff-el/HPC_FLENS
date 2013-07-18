@@ -1,8 +1,8 @@
 OS = $(shell uname -s)
 PC = $(shell uname -n)
 
-LDFLAGS  := -L../Fem -L../Flens_supl -L../LinearAlgebra
-LDLIBS	 := -lFem -lFlens -lLinAlg
+LDFLAGS  := -L../Fem -L../Flens_supl
+LDLIBS	 := -lFem -lFlens
 
 ifeq ($(PC),pacioli)
   IFLENS   :=-I../../FLENS
