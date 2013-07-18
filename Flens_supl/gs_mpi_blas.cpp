@@ -355,13 +355,13 @@ gs_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     {
         innerNodes(bc(k)) = 1;
     }
+    
     // count inner nodes
     IndexType nI=0;
     for(IndexType j=nV+1; j<=numNodes; ++j)
     {
         if(innerNodes(j)==0) ++nI;
     }
-
         
     IVector indexI(nI);
     counter=1;

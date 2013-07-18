@@ -120,4 +120,4 @@ write(flens::DenseVector<flens::Array<ElementType> > &DVector, std::string filen
 
 }; //namespace flens
 
-#endif // FLENS_READ_WRITE_METHODS_CPP
+#endif	// FLENS_READ_WRITE_METHODS_CPP

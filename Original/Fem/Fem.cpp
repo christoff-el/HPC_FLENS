@@ -172,10 +172,6 @@ void FEM::solve(Solver method)
         if(!_mesh.distributed()){
             it = CG(_A ,_u.values, _b.values, fixedNodes, maxIt, tol);
         }else{    
-        	const int rank = MPI::COMM_WORLD.Get_rank();
-        	_b.writeData(rank,"b.txt");
-        	if (rank==0){
-        	_A.writeCRS("A.txt");}
             it = CG_MPI(_A ,_u, _b, fixedNodes,  maxIt, tol);
         }
     }
