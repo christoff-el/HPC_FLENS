@@ -337,7 +337,7 @@ FEM<METH>::getA()
 {
 
   	return _A;
-  	
+
 }
 
 template <typename METH>

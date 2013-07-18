@@ -49,8 +49,8 @@ FLENSDataVector<FLvTypeII>::FLENSDataVector(int n, const Coupling &_coupling)
 {
 	//Permits instatiation of FlvTypeII specialisation.
 }
-	
-	
+
+
 //Copy constructor (VTYPEs obligated to match):
 template <typename VTYPE>
 FLENSDataVector<VTYPE>::FLENSDataVector(const FLENSDataVector<VTYPE> &rhs)
@@ -81,7 +81,7 @@ FLENSDataVector<FLvTypeI>::typeI_2_II()
 	for (int i=1; i<=coupling.local2globalCrossPoints.length(); ++i) {
 		(*this)(i) /= coupling.crossPointsNumProcs(i);
 	}
-	
+
 	//Divide values at boundary nodes by 2 (since here 2 processes overlap):		(don't divide for cross points!)
 	for (int i=1; i<=coupling.numCoupling; ++i) {
 		for (int j=2; j<=coupling.boundaryNodes[i].length()-1; ++j) {
@@ -98,7 +98,7 @@ FLENSDataVector<VTYPE>::commCrossPoints()
 
 	DenseVector<Array<double> > u_crossPoints(coupling.numCrossPoints);
 	DenseVector<Array<double> > u_crossPoints_gl(coupling.numCrossPoints);
-	
+
 	//Local values at all global cross points:
 	for (int i=1; i<=coupling.local2globalCrossPoints.length(); ++i) {
 		u_crossPoints(coupling.local2globalCrossPoints(i)) = (*this)(i);
@@ -124,13 +124,13 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 	for (int i=1; i<=coupling.maxColor; ++i) {
 		for (int j=0; j<coupling.numCoupling; ++j) {
 			if (coupling.colors(j+1) == i && coupling.boundaryNodes[j].length()-2 > 0) {
-			
+
 				//Only communicate if there is a boundary node on coupling boundary (no cross points):
 				int sendLength = coupling.boundaryNodes[j].length()-2;
 
 				DenseVector<Array<double> > u_send(sendLength);
 				DenseVector<Array<double> > u_recv(sendLength);
-				
+
 				//Set local values to be sent:
 				for (int k=1; k<=sendLength; ++k) {
 					u_send(k) = (*this)(coupling.boundaryNodes[j](k+1));
@@ -141,12 +141,11 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 											coupling.neighbourProcs(j+1)-1, 0,
 											u_recv.data(), sendLength, MPI::DOUBLE, 
 											coupling.neighbourProcs(j+1)-1,0);
-				
+
 				//Add values collected from the other processes (!!numbering is opposite):
 				for (int k=0; k<sendLength; ++k) {
 					(*this)(coupling.boundaryNodes[j](k+2)) += u_recv(sendLength-k);
 				}
-
 			}
 		}
   	}    
@@ -170,16 +169,16 @@ FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
     filename = filename + strproc + ".dat";
 
 	std::fstream f;
-	
+
 	f.open(filename.c_str(), std::ios::out);
 	if (f.is_open()){
-	
+
 		for (int i=1; i<=(*this).length(); ++i) {
 			f << (*this)(i) << std::endl;
 		}
-		
+
 		f.close();
-		
+
 	}
     
 }
@@ -187,18 +186,18 @@ FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
 }	//namespace flens
 
 
+
 namespace flens{ namespace blas{
 
 //Overloaded copy, so that when copying typeII->I, we also apply the appropriate type conversion:
-template <typename>
 void
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
-	
+
 	//Create pointers that upcast FLENSDataVector to Parent DenseVector:
 	//DenseVector<Array<double> > *tmpOrig = &orig;
 	//DenseVector<Array<double> > *tmpDest = &dest;
-	
+
 	//Copy data as usual (masquerading as a DenseVector :) ):
 	//blas::copy(*tmpOrig, *tmpDest);
 	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
@@ -210,7 +209,6 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 }
 
 //Overloaded dot - performs appropriate communication:
-template <typename>
 double
 dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 {
@@ -218,22 +216,21 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 	//Upcast to DenseVector, and use the standard blas::dot:
 	//DenseVector<Array<double> > *tmpx1 = &x1;
 	//DenseVector<Array<double> > *tmpx2 = &x2;
-	
+
 	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1),
 	                         *static_cast<DenseVector<Array<double> > *>(&x2));
-	
+
 	//Receive buffer:
 	double buf = 0;
 
 	//*** Communication to add values from other processes ***/
 	MPI::COMM_WORLD.Allreduce(&value, &buf, 1,MPI::DOUBLE,MPI::SUM);
-	
+
 	return buf;
 
 }
 
 //Adds commutativity to dot:
-template <typename>
 double
 dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
 {

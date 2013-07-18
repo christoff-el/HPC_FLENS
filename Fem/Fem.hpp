@@ -41,9 +41,9 @@ struct SelectDataVector<flens::MethNonMPI>
 template <typename METH>
 class FEM{
 public:
-	
+
 	typedef flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > >	CRSMat;
-	
+
 	/*** Constructors and destructor *****************************************************/
 	FEM(Mesh &mesh_tmp, 
 			double (*f)(double,double), 
@@ -64,6 +64,7 @@ public:
 	/*** getter and write methods ********************************************************/
 	CRSMat getA();
 	typename SelectDataVector<METH>::TypeII getb();
+
 		
     int getNumElements();
 	void writeSolution(int proc=0,std::string filename="./output/");		
@@ -83,6 +84,7 @@ private:
 		
 	//Storage structures for FEM system:
 	CRSMat 	_A;
+
 	
 	typename SelectDataVector<METH>::TypeI    _uD, _u;
 	typename SelectDataVector<METH>::TypeII   _b;

@@ -58,15 +58,12 @@ struct FLENSDataVector
 
 namespace flens{ namespace blas{
 
-template <typename>
 void 
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest);
 
-template <typename>
 double
 dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2);
 
-template <typename>
 double
 dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2);
 
