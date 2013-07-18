@@ -2,22 +2,17 @@
 #define FEM_H_ 1
 
 #include <flens/flens.cxx>
-#include <vector>
 #include <math.h>
 #include <type_traits>
 
-
 #include "../Flens_supl/FlensHeader.h"
-
 #include "Mesh.hpp"
-
-#include "../LinearAlgebra/CRSMatrix.hpp"
-#include "DataVector.hpp"
 
 
 // flags for solving SLE
 enum Solver { cg, pcg, gs, mg, jac };
 
+//Structure for selecting either MPI or NonMPI DataVectors:
 template <typename A>
 struct SelectDataVector
 {
@@ -85,9 +80,8 @@ private:
 	//Storage structures for FEM system:
 	CRSMat 	_A;
 
-	
-	typename SelectDataVector<METH>::TypeI    _uD, _u;
-	typename SelectDataVector<METH>::TypeII   _b;
+	typename SelectDataVector<METH>::TypeI    _uD, _u;		//Vector types based on FEM METHOD
+	typename SelectDataVector<METH>::TypeII   _b;			// type (MPI or NonMPI).
 		
 	//Function pointers for Dirichlet-/Neumann-data and right-hand side:
 	double (*_f)(double, double);
@@ -102,5 +96,5 @@ private:
 
 #include "Fem.cpp"
 
-#endif
+#endif	//FEM_H
 

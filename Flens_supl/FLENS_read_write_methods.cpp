@@ -15,7 +15,7 @@ read(flens::GeMatrix<flens::FullStorage<ElementType> > &GeMatrix, std::string fi
 	FILE * in;
 
 	// Format check
-	char* format;
+	std::string format;
 	if ((typeid(ElementType)==typeid(int))
 		|| (typeid(ElementType)==typeid(unsigned int))
 		|| (typeid(ElementType)==typeid(long int))
@@ -39,7 +39,7 @@ read(flens::GeMatrix<flens::FullStorage<ElementType> > &GeMatrix, std::string fi
 		{
 			for(IndexType c=1; c<=GeMatrix.numCols(); ++c)
 			{
-				fscanf(in, format, &GeMatrix(r,c));
+				fscanf(in, format.c_str(), &GeMatrix(r,c));
 			}
 		}
 	}
@@ -55,7 +55,7 @@ read(flens::DenseVector<flens::Array<ElementType> > &DVector, std::string filena
 	IndexType j;
 
 	// Format check
-	char* format;
+	std::string format;
 	if ((typeid(ElementType)==typeid(int))
 		|| (typeid(ElementType)==typeid(unsigned int))
 		|| (typeid(ElementType)==typeid(long int))
@@ -78,12 +78,10 @@ read(flens::DenseVector<flens::Array<ElementType> > &DVector, std::string filena
 		DVector.resize(j);
 		for(IndexType l=1; l<=DVector.length(); ++l)
 		{
-			fscanf(in, format, &DVector(l));
+			fscanf(in, format.c_str(), &DVector(l));
 		}
 	}
 };
-
-
 
 
 // Write Matrix

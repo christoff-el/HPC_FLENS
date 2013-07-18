@@ -4,6 +4,7 @@
 #include <flens/flens.cxx>
 #include <limits>
 
+#include "FLENSDataVector.h"
 
 //FLENS-based dense GS solver
 template <typename MA, typename VX, typename VB, typename VBC>
