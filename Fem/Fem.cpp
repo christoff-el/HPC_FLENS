@@ -20,10 +20,10 @@ template <>
 FEM<flens::MethNonMPI>::FEM(Mesh &mesh, double (*f)(double,double), 
         			double (*DirichletData)(double,double), double (*g)(double,double))
         :	_mesh(mesh),
-        	fl_A(),
-	    	fl_uD(mesh.numNodes),
-         	fl_u(mesh.numNodes),
-         	fl_b(mesh.numNodes),
+        	_A(),
+	    	_uD(mesh.numNodes),
+         	_u(mesh.numNodes),
+         	_b(mesh.numNodes),
          	_f(f),
          	_g(g),
          	_DirichletData(DirichletData)
@@ -36,10 +36,10 @@ template <>
 FEM<flens::MethMPI>::FEM(Mesh &mesh, double (*f)(double,double), 
         			double (*DirichletData)(double,double), double (*g)(double,double))
         :	_mesh(mesh),
-        	fl_A(),
-	    	fl_uD(mesh.numNodes, mesh.coupling),
-         	fl_u(mesh.numNodes, mesh.coupling),
-         	fl_b(mesh.numNodes, mesh.coupling),
+        	_A(),
+	    	_uD(mesh.numNodes, mesh.coupling),
+         	_u(mesh.numNodes, mesh.coupling),
+         	_b(mesh.numNodes, mesh.coupling),
          	_f(f),
          	_g(g),
          	_DirichletData(DirichletData)
@@ -124,9 +124,9 @@ FEM<METH>::assemble()
         
         //Evaluate volume force f at center of mass of each element:
         fval = _f( c1[0] + (d21[0]+d31[0])/3., c1[1] + (d21[1]+d31[1])/3. ) / 12. * area4;
-        fl_b( _mesh.elements(i+1,1)) += fval;
-        fl_b( _mesh.elements(i+1,2)) += fval;
-        fl_b( _mesh.elements(i+1,3)) += fval;
+        _b( _mesh.elements(i+1,1)) += fval;
+        _b( _mesh.elements(i+1,2)) += fval;
+        _b( _mesh.elements(i+1,3)) += fval;
         
     }
 
@@ -148,8 +148,8 @@ FEM<METH>::assemble()
             
             //Evaluate Neumann data g at midpoint of neumann edge and multiply with half length:
             double gmE = length2*_g(0.5*(cn1[0]+cn2[0]) , 0.5*(cn1[1]+cn2[1]));
-            fl_b( _mesh.neumann[k](j)  ) += gmE;
-            fl_b( _mesh.neumann[k](j+1)) += gmE;   
+            _b( _mesh.neumann[k](j)  ) += gmE;
+            _b( _mesh.neumann[k](j+1)) += gmE;   
              
         }   
          
@@ -159,7 +159,7 @@ FEM<METH>::assemble()
     /*** Set stiffness matrix ***/
     
     //Build FLENS CRS matrix from I, J, vals (rows, cols, values):
-    flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(fl_uD.length(),fl_uD.length());
+    flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(_uD.length(),_uD.length());
 
     // flens::CoordRowColCmp, flens::IndexBaseOne<int> 
     for (int i=1; i<=I.length(); ++i) {
@@ -170,16 +170,16 @@ FEM<METH>::assemble()
     	
     }
 
-    fl_A = fl_A_coord;
+    _A = fl_A_coord;
 
 
     /*** Set right-hand side vector b ***/    
-    flens::FLENSDataVector<flens::FLvTypeII> fl_Au(fl_uD.length(), _mesh.coupling);
+    flens::FLENSDataVector<flens::FLvTypeII> fl_Au(_uD.length(), _mesh.coupling);
         
 
     /*** Incorporate Dirichlet-Data ***/
-    flens::blas::mv(flens::NoTrans, 1., fl_A, fl_uD, 0., fl_Au);
-    flens::blas::axpy(-1., fl_Au, fl_b);    
+    flens::blas::mv(flens::NoTrans, 1., _A, _uD, 0., fl_Au);
+    flens::blas::axpy(-1., fl_Au, _b);    
 
 }
 
@@ -258,12 +258,12 @@ FEM<METH>::solve(Solver method)
     	//Serial solver:
         //if (!_mesh.distributed()) {
         if (std::is_same<METH, flens::MethNonMPI>::value) {
-            it = cg_nompi_blas(fl_A ,fl_b, fl_u, fixedNodes, maxIt, tol);
+            it = cg_nompi_blas(_A ,_b, _u, fixedNodes, maxIt, tol);
         }
         
         //Parallel solver:
         else { 
-            it = cg_mpi_blas(fl_A ,fl_b, fl_u, fixedNodes,  maxIt, tol);
+            it = cg_mpi_blas(_A ,_b, _u, fixedNodes,  maxIt, tol);
         }
         
     }
@@ -274,12 +274,12 @@ FEM<METH>::solve(Solver method)
     	
     	//Serial solver:
 		if (std::is_same<METH, flens::MethNonMPI>::value) {
-			it = gs_nompi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt, tol);
+			it = gs_nompi_blas(_A, _b, _u, fixedNodes, maxIt, tol);
 		}
 		
 		//Parallel solver:
 		else {
-			it = gs_mpi_blas(fl_A, fl_b, fl_u, fixedNodes, maxIt);
+			it = gs_mpi_blas(_A, _b, _u, fixedNodes, maxIt);
 		}
 		
 	}
@@ -322,9 +322,9 @@ FEM<METH>::refineRed()
 	_mesh.refineRed();
 
     /*** Resize DataVectors (note: clears data) ***/
-  	fl_u.resize(_mesh.numNodes);
-  	fl_b.resize(_mesh.numNodes);
-  	fl_uD.resize(_mesh.numNodes);
+  	_u.resize(_mesh.numNodes);
+  	_b.resize(_mesh.numNodes);
+  	_uD.resize(_mesh.numNodes);
         
 }
 
@@ -332,19 +332,21 @@ FEM<METH>::refineRed()
 /*******************************  getter and write methods   **********************************/
 /**********************************************************************************************/
 template <typename METH>
-CRSMatrix 
+flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > >
 FEM<METH>::getA()
 {
-	//HACK Err.. Turn if off for now.
-  	return CRSMatrix();
+
+  	return _A;
+  	
 }
 
 template <typename METH>
-flens::FLENSDataVector<typename METH:: II> 
+typename SelectDataVector<METH>::TypeII
 FEM<METH>::getb()
 {
 	
-    return fl_b;
+    return _b;
+    
 }
 
 template <typename METH>
@@ -359,7 +361,7 @@ void
 FEM<METH>::writeSolution(int proc, std::string filename)
 {
 	_mesh.writeData(proc, filename);
-	fl_u.writeData(proc, filename + "solution");
+	_u.writeData(proc, filename + "solution");
 }
 
 /**********************************************************************************************/
@@ -379,10 +381,10 @@ FEM<METH>::_updateDirichlet()
         	index1 = _mesh.dirichlet[k](i);
         	
             //Set Dirichlet data on nodes:
-         	fl_uD(index1) = _DirichletData(_mesh.coordinates(index1,1), _mesh.coordinates(index1,2));
+         	_uD(index1) = _DirichletData(_mesh.coordinates(index1,1), _mesh.coordinates(index1,2));
          	
        		//Set Dirichlet data in solution vector:
-       		fl_u(index1) = fl_uD(index1);
+       		_u(index1) = _uD(index1);
        		
         }
     }
@@ -392,10 +394,10 @@ FEM<METH>::_updateDirichlet()
         if (_mesh.coupling.crossPointsBdryData(i)!=0) {
         
             //Set Dirichlet data on nodes:
-      		fl_uD(i) = _DirichletData(_mesh.coordinates(i,1), _mesh.coordinates(i,2));
+      		_uD(i) = _DirichletData(_mesh.coordinates(i,1), _mesh.coordinates(i,2));
       		
       		//Set Dirichlet data in solution vector:
-      		fl_u(i) = fl_uD(i);
+      		_u(i) = _uD(i);
       		
         }
     }  

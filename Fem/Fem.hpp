@@ -42,6 +42,8 @@ template <typename METH>
 class FEM{
 public:
 	
+	typedef flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > >	CRSMat;
+	
 	/*** Constructors and destructor *****************************************************/
 	FEM(Mesh &mesh_tmp, 
 			double (*f)(double,double), 
@@ -60,8 +62,8 @@ public:
 	void refineRed();
 		
 	/*** getter and write methods ********************************************************/
-	CRSMatrix getA();
-	flens::FLENSDataVector<typename METH:: II> getb();
+	CRSMat getA();
+	typename SelectDataVector<METH>::TypeII getb();
 		
     int getNumElements();
 	void writeSolution(int proc=0,std::string filename="./output/");		
@@ -80,10 +82,10 @@ private:
 	Mesh _mesh; 
 		
 	//Storage structures for FEM system:
-	flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > > fl_A;
+	CRSMat 	_A;
 	
-	typename SelectDataVector<METH>::TypeI    fl_uD, fl_u;
-	typename SelectDataVector<METH>::TypeII   fl_b;
+	typename SelectDataVector<METH>::TypeI    _uD, _u;
+	typename SelectDataVector<METH>::TypeII   _b;
 		
 	//Function pointers for Dirichlet-/Neumann-data and right-hand side:
 	double (*_f)(double, double);

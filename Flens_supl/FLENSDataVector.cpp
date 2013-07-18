@@ -63,7 +63,7 @@ template <>
 void
 FLENSDataVector<FLvTypeI>::typeII_2_I()
 {
-	std::cout<<"hi"<<std::endl;
+
 	//Sum up values at cross points:
 	commCrossPoints();
 
