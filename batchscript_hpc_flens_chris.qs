@@ -21,14 +21,14 @@
 #$ -N davis_hpc
 
 # Module
-module load gcc/4.7.2
-module load sge/6.2u5
-module load openmpi/gcc/64/1.4.2
+#module load gcc/4.7.2
+#module load sge/6.2u5
+#module load openmpi/gcc/64/1.4.2
 
 # Befehle
 make
 cd ./examples
-mpirun -np 4 main-parallel ./input/Square_four_domains
+mpirun -np 4 main-parallel ./input/Square_four_domains cg
 
 echo "habe $NSLOTS Prozessor"
 echo "Maschine:"
