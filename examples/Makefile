@@ -1,7 +1,14 @@
 OS = $(shell uname -s)
+PC = $(shell uname -n)
 
 LDFLAGS  := -L../Fem -L../Flens_supl -L../LinearAlgebra
 LDLIBS	 := -lFem -lFlens -lLinAlg
+
+ifeq ($(PC),pacioli)
+  IFLENS   :=-I../../FLENS
+else
+  IFLENS   := -I/usr/local/FLENS
+endif
 
 ifeq ($(OS),Darwin)
   CC  := mpic++
@@ -16,7 +23,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -I. -I.. -I../Flens_supl -I../Fem -I/opt/local/include/openmpi -I/usr/local/FLENS -std=c++11
+CPPFLAGS = -Wall -I. -I.. -I../Flens_supl -I../Fem -I/opt/local/include/openmpi $(IFLENS) -std=c++11
 
 .PHONY:   all clean
 

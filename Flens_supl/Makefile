@@ -1,4 +1,11 @@
 OS = $(shell uname -s)
+PC = $(shell uname -n)
+
+ifeq ($(PC),pacioli)
+  IFLENS   :=-I../../FLENS
+else
+  IFLENS   := -I/usr/local/FLENS
+endif
 
 .PHONY: all clean
 
@@ -15,7 +22,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include -I/usr/local/FLENS -std=c++11 -c
+CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include $(IFLENS) -std=c++11 -c
 
 .PHONY: all clean
 

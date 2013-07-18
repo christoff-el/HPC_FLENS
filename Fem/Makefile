@@ -1,7 +1,14 @@
 OS = $(shell uname -s)
+PC = $(shell uname -n)
 
 LDFLAGS  := -L../Flens_supl
 LDLIBS	 := -lFlens
+
+ifeq ($(PC),pacioli)
+  IFLENS   :=-I../../FLENS
+else
+  IFLENS   := -I/usr/local/FLENS
+endif
 
 .PHONY: all clean
 
@@ -18,7 +25,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include -I/usr/local/FLENS -std=c++11 -c
+CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include $(IFLENS) -std=c++11 -c
 
 
 all: Coupling.o DataVector.o MathOperationsMPI.o Mesh.o Solver.o Fem.o libFem.a
