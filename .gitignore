@@ -3,6 +3,10 @@
 *.out
 *.a
 b.*
+*.aux
+*.log
+*.gz
+*.toc
 /examples/output/
 /Original/examples/output
 
