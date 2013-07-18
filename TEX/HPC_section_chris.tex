@@ -1,0 +1,21 @@
+
+\Section{Introduction}
+
+The basis of this lecture course has been the parallelisation of various numerical methods, with a particular focus on the Finite Element Method. For this project we have been supplied with a software package (which we shall henceforth call \emph{the FEM package}) that computes the solution to the Poisson partial differential equation using the Finite Element Method. This package is self contained - it includes its own custom matrix/vector types, and its own implementations of linear algebra operations on these types. Our goal is to make improvements to the package with the help of the FLENS.
+
+FLENS (\emph{Flexible Library for Efficient Numerical Solutions}) is a C++ library written by Dr. Michael Lehn, which offers a comprehensive collection of matrix and vector types. Included is a C++ -based BLAS (\emph{Basic Linear Algebra Subfunctions} implementation, which provides linear algebra operations, such as matrix-vector multiplication, on these types. 
+
+The advantages of using the FLENS in the FEM package are numerous. Firstly, use of an external library for matrix/vector types adds some standardisation to the package, aiding, for example, a user who is new to the FEM package, but has experience of the FLENS from other projects. Secondly, the library can be linked, with almost trivial effort, to any optimised BLAS or LAPACK libraries available, such as \emph{ATLAS} or \emph{Goto BLAS}, for instant speed improvements of BLAS operations. Thirdly, the FLENS offers overloaded operators for the BLAS operations. We recognise that users from different backgrounds may have a preference regarding the noation used for linear algebra operations, be it the tradition BLAS notation:
+\shellcmd{blas::mv(NoTrans, One, A, p, Zero, Ap)}
+or a notation more akin to that of MATLAB:
+\shellcmd{Ap = A*p}
+(for a matrix A, vector p). With FLENS, we have the choice.
+
+We therefore summarise the aims of this project as follows:
+\begin{enumerate}
+   \item Replace all data storage objects with FLENS-based objects.
+   \item Where possible, replace linear algebra operations with their BLAS equivalents.
+   \item Offer two versions of solvers, one with BLAS notation, one with overloaded operators.
+\end{enumerate}
+
+Thus it is worth noting that we are primarily 
