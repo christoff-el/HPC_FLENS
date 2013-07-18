@@ -133,7 +133,7 @@ FLENSDataVector<VTYPE>::commBoundaryNodes()
 				
 				//Set local values to be sent:
 				for (int k=1; k<=sendLength; ++k) {
-					u_send(k) = (*this)(coupling.boundaryNodes[j](k));
+					u_send(k) = (*this)(coupling.boundaryNodes[j](k+1));
 				}
 
 				//Get values from other processes:
