@@ -16,14 +16,14 @@
 
 # queue
 # DUAL?????
-#$ -q dual.q
-#$ -pe mpich 4
+#$ -q single.q
+#$ -pe mpich 8
 #$ -N davis_hpc
 
 # Module
-#module load gcc/4.7.2
-#module load sge/6.2u5
-#module load openmpi/gcc/64/1.4.2
+module load gcc/4.7.2
+module load sge/6.2u5
+module load openmpi/gcc/64/1.4.2
 
 # Befehle
 make

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <mpi.h>
+#include <sys/utsname.h>
 
 #include <flens/flens.cxx>
 
@@ -19,7 +20,8 @@ int main(int argc, char *argv[]){
 
 	/* *** initialise MPI interface */
     MPI::Init(argc,argv);
-    const int rank = MPI::COMM_WORLD.Get_rank();
+    const int rank = 	   MPI::COMM_WORLD.Get_rank();
+    const int procCount =  MPI::COMM_WORLD.Get_size();
 
 	/* *** check input parameters */
     if (argc!=3) {
@@ -48,6 +50,20 @@ int main(int argc, char *argv[]){
     	MPI::COMM_WORLD.Abort(-1);
     	
     } 
+    
+    /* *** output node names, so that we know which nodes/processors/cores of our
+    		cluster are actually running the code */
+    struct utsname machine_info;
+    uname(&machine_info);
+    for (int i=0; i<procCount; ++i) {
+    	if (rank == i) {
+    	
+    		MPI::COMM_WORLD.Barrier();
+    		cout << "I'm " << machine_info.nodename << 
+    				", running the FEM package as rank " << rank << endl;
+    				
+    	}
+    }
     
     /* *** initialise geometry data containers */
     IMatrix elements, skeleton;
