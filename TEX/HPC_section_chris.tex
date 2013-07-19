@@ -65,7 +65,7 @@ The FEM package uses the nomenclature defined in the lecture course, of \emph{Ty
    \item \textbf{TypeII}: local values.
 \end{itemize}
 
-We adopt this definition in this paper and in our code.
+We adopt this definition in this paper and in our code, and refer to these types as \emph{MPI vector types}.
 
 \subsection{FLENSDataVector}
 
@@ -73,12 +73,20 @@ The FEM package's \emph{DataVector} class is the package's primary custom vector
 \begin{itemize}
    \item Vector object: stores the values of the DataVector.
    \item Coupling object: contains mesh geometry information required for MPI communications.
-   \item A vectorType enumerated type: determines the `type' of the vector, as defined in Section \ref{subsc:typeI_II}.
+   \item A vectorType enumerated type: determines the MPI vector type of the vector (see Section \ref{subsc:typeI_II}).
 \end{itemize}
 
-We propose a FLENS-based replacement for this class called FLENSDataVector, with a few small yet profound modifications to the structure.
+We propose a FLENS-based replacement for this class called FLENSDataVector, which incorporates a few small yet profound modifications to the structure.
 
-Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\<\double\> \>} to store our vector values. However, we choose to \emph{derive} our class from this FLENS type, rather than specifying a \texttt{DenseVector} as a member object. I.e. we use a `is-a' \texttt{DenseVector} approach, rather than a `has-a' approach. The advantage here is that our class inherits all methods and overloaded operator from the \texttt{DenseVector} class, and can be passed directly to the FLENS BLAS functions. This lends itself to a more parsimonious implementation - under the `has-a' approach, we would need to overload every BLAS function, and clutter our FLENSDataVector class with trivial operators, such as:
+Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\<\double\> \>} to store our vector values. However, we choose to \emph{derive} our class from this FLENS type, rather than specifying a \texttt{DenseVector} as a member object. I.e. we use a `is-a' \texttt{DenseVector} approach, rather than a `has-a' approach. The advantage here is that our class inherits all methods and overloaded operator from the \texttt{DenseVector} class, and can be passed directly to the FLENS BLAS functions. This lends itself to a more parsimonious implementation - under the `has-a' approach we would need to overload every BLAS function, such as: 
+\begin{lstlisting}
+   double
+   dot(FLENSDataVector x, FLENSDataVector y) {
+   	blas::dot(x.vec, y.vec);
+   }
+\end{lstlisting}
+
+and clutter our FLENSDataVector class with trivial operators, such as:
 
 \begin{lstlisting}
    double &
@@ -87,14 +95,11 @@ Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\
    }
 \end{lstlisting}
 
-or
+neither of which are desirable.
 
-\begin{lstlisting}
-   double
-   dot(FLENSDataVector x, FLENSDataVector y) {
-   	blas::dot(x.vec, y.vec);
-   }
-\end{lstlisting}
+Next we consider the enumerated type that specifies the MPI vector type. Here we wish to change the structure somewhat - whilst setting the MPI vector type in this fashion is easy and flexible, allowing the type to be changed as and when required, we find this to be \emph{too} flexible, and far from ideal from a software design perspective. To better explain the situation, we consider hair colour as an analogy. 
+
+
 
 This class stores its vector values in 
 
