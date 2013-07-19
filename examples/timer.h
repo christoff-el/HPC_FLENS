@@ -35,7 +35,8 @@ public:
     	
     	if (timings) {
 	    	stop();
-    		MPI::COMM_WORLD.Barrier();
+	    	
+    		if (proc>=0){MPI::COMM_WORLD.Barrier();}
     		if (point == "load") {
     	
     			if (proc == 0) {
@@ -68,11 +69,11 @@ public:
     			return;
     		}
     	
-	    	MPI::COMM_WORLD.Barrier();
+	    	if (proc>=0){MPI::COMM_WORLD.Barrier();}
     		
     		std::cout << "      Node " << proc << ": " << elapsed() << " seconds." << std::endl;
     		
-    		MPI::COMM_WORLD.Barrier();
+    		if (proc>=0){MPI::COMM_WORLD.Barrier();}
     		
 	    	start();	
 	    	
