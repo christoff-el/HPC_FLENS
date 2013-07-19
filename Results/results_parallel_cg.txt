@@ -1,0 +1,154 @@
+cg 5
+I'm node001, running the FEM package as rank 1
+I'm node007, running the FEM package as rank 3
+I'm node010, running the FEM package as rank 2
+I'm node006, running the FEM package as rank 0
+Times for initialisation/data loading:
+      Node 0: 0.022826 seconds.
+      Node 1: 0.022918 seconds.
+      Node 2: 0.022894 seconds.
+      Node 3: 0.022913 seconds.
+
+Times for mesh generation and refinement:
+      Node 0: 0.03421 seconds.
+      Node 1: 0.034068 seconds.
+      Node 2: 0.033729 seconds.
+      Node 3: 0.033817 seconds.
+
+Times for system assembly:
+      Node 0: 0.19811 seconds.
+      Node 1: 0.196322 seconds.
+      Node 2: 0.193584 seconds.
+      Node 3: 0.192863 seconds.
+
+Iterations: 532  , MaxIterations:  33284
+
+Times for solution solving:
+      Node 0: 0.842386 seconds.
+      Node 1: 0.842279 seconds.
+      Node 2: 0.842291 seconds.
+      Node 3: 0.842265 seconds.
+
+cg 6
+I'm node006, running the FEM package as rank 0
+I'm node007, running the FEM package as rank 3
+I'm node010, running the FEM package as rank 2
+I'm node001, running the FEM package as rank 1
+Times for initialisation/data loading:
+      Node 0: 0.048301 seconds.
+      Node 1: 0.048336 seconds.
+      Node 3: 0.048353 seconds.
+      Node 2: 0.048407 seconds.
+
+Times for mesh generation and refinement:
+      Node 0: 0.137229 seconds.
+      Node 1: 0.136879 seconds.
+      Node 3: 0.137697 seconds.
+      Node 2: 0.137743 seconds.
+
+Times for system assembly:
+      Node 0: 0.823594 seconds.
+      Node 1: 0.823864 seconds.
+      Node 3: 0.828224 seconds.
+      Node 2: 0.831017 seconds.
+
+Iterations: 1045  , MaxIterations:  132100
+
+Times for solution solving:
+      Node 0: 6.56945 seconds.
+      Node 1: 6.56925 seconds.
+      Node 3: 6.56924 seconds.
+      Node 2: 6.56928 seconds.
+
+cg 7
+I'm node006, running the FEM package as rank 0
+I'm node010, running the FEM package as rank 2
+I'm node007, running the FEM package as rank 3
+I'm node001, running the FEM package as rank 1
+Times for initialisation/data loading:
+      Node 0: 0.050482 seconds.
+      Node 2: 0.050419 seconds.
+      Node 3: 0.050504 seconds.
+      Node 1: 0.050588 seconds.
+
+Times for mesh generation and refinement:
+      Node 0: 0.563338 seconds.
+      Node 2: 0.564655 seconds.
+      Node 3: 0.560689 seconds.
+      Node 1: 0.563221 seconds.
+
+Times for system assembly:
+      Node 0: 3.52198 seconds.
+      Node 2: 3.60874 seconds.
+      Node 3: 3.58526 seconds.
+      Node 1: 3.53437 seconds.
+
+Iterations: 2049  , MaxIterations:  526340
+
+Times for solution solving:
+      Node 0: 54.3276 seconds.
+      Node 2: 54.3267 seconds.
+      Node 3: 54.3267 seconds.
+      Node 1: 54.3269 seconds.
+
+cg 8
+I'm node006, running the FEM package as rank 0
+I'm node010, running the FEM package as rank 2
+I'm node001, running the FEM package as rank 1
+I'm node007, running the FEM package as rank 3
+Times for initialisation/data loading:
+      Node 0: 0.036565 seconds.
+      Node 1: 0.036591 seconds.
+      Node 2: 0.03657 seconds.
+      Node 3: 0.036596 seconds.
+
+Times for mesh generation and refinement:
+      Node 0: 2.27871 seconds.
+      Node 1: 2.36366 seconds.
+      Node 2: 2.34018 seconds.
+      Node 3: 2.27619 seconds.
+
+Times for system assembly:
+      Node 0: 15.0885 seconds.
+      Node 1: 15.264 seconds.
+      Node 2: 15.2886 seconds.
+      Node 3: 15.5608 seconds.
+
+Iterations: 3988  , MaxIterations:  2101252
+
+Times for solution solving:
+      Node 0: 459.899 seconds.
+      Node 1: 459.898 seconds.
+      Node 2: 459.898 seconds.
+      Node 3: 459.898 seconds.
+
+cg 9
+I'm node006, running the FEM package as rank 0
+I'm node010, running the FEM package as rank 2
+I'm node007, running the FEM package as rank 3
+I'm node001, running the FEM package as rank 1
+Times for initialisation/data loading:
+      Node 0: 0.038835 seconds.
+      Node 1: 0.038976 seconds.
+      Node 2: 0.038922 seconds.
+      Node 3: 0.038956 seconds.
+
+Times for mesh generation and refinement:
+      Node 0: 9.22954 seconds.
+      Node 1: 9.30874 seconds.
+      Node 2: 9.39463 seconds.
+      Node 3: 9.2036 seconds.
+
+Times for system assembly:
+      Node 0: 64.6111 seconds.
+      Node 1: 66.012 seconds.
+      Node 2: 65.167 seconds.
+      Node 3: 66.7187 seconds.
+
+Iterations: 7848  , MaxIterations:  8396804
+
+Times for solution solving:
+      Node 0: 3641.48 seconds.
+      Node 1: 3641.48 seconds.
+      Node 2: 3641.48 seconds.
+      Node 3: 3641.48 seconds.
