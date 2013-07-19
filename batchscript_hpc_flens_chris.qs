@@ -38,7 +38,7 @@ cd ./examples
 
 # Run code, allocating mpi units in round-robin fashion BY NODE
 #  (i.e. have one process on each node before starting a second process on a node):
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains cg
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 cg 1
 
 echo "habe $NSLOTS Prozessor"
 echo "Maschine:"
