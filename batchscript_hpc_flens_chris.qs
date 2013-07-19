@@ -12,7 +12,7 @@
 #$ -m abes
 
 # requested wall clock time
-#$ -l h_rt=0:10:0
+#$ -l h_rt=2:00:00
 
 # queue
 # Specify we want nodes with only 1 processor:
@@ -23,22 +23,49 @@
 #$ -pe mpich 8
 #$ -N davis_hpc
 
-# Try to demand exclusive use of the nodes by requesting 7GB free memory
-#  (nodes requested have 8GB):      (possibly unrequired)
-#$ -l mem_free=7G
-
 # Module
 module load gcc/4.7.2
 module load sge/6.2u5
 module load openmpi/gcc/64/1.4.2
 
 # Befehle
-make
 cd ./examples
 
 # Run code, allocating mpi units in round-robin fashion BY NODE
 #  (i.e. have one process on each node before starting a second process on a node):
+
+# Get times for different mesh refinements:
+
+echo "cg 5"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 5 cg 1
+
+echo "cg 6"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 6 cg 1
+
+echo "cg 7"
 mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 cg 1
+
+echo "cg 8"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 8 cg 1
+
+echo "cg 9"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 cg 1
+
+echo "gs 5"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 5 gs 1
+
+echo "gs 6"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 6 gs 1
+
+echo "gs 7"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 gs 1
+
+echo "gs 8"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 8 gs 1
+
+echo "gs 9"
+mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 gs 1
+
 
 echo "habe $NSLOTS Prozessor"
 echo "Maschine:"
