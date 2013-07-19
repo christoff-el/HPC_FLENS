@@ -36,7 +36,7 @@ public:
     	if (timings) {
 	    	stop();
 	    	
-    		if (proc>=0){MPI::COMM_WORLD.Barrier();}
+    		MPI::COMM_WORLD.Barrier();
     		if (point == "load") {
     	
     			if (proc == 0) {
@@ -69,12 +69,49 @@ public:
     			return;
     		}
     	
-	    	if (proc>=0){MPI::COMM_WORLD.Barrier();}
+	    	MPI::COMM_WORLD.Barrier();
     		
     		std::cout << "      Node " << proc << ": " << elapsed() << " seconds." << std::endl;
     		
-    		if (proc>=0){MPI::COMM_WORLD.Barrier();}
+    		MPI::COMM_WORLD.Barrier();
     		
+	    	start();	
+	    	
+	    }
+    }	
+    
+    void
+    outNoMPI(std::string point, bool timings) {
+    	
+    	if (timings) {
+	    	stop();
+	    	
+    		if (point == "load") {
+    	
+    				std::cout << "Times for initialisation/data loading:" << std::endl;
+    		
+    		}
+	    	else if (point == "mesh") {
+    	
+    				std::cout << "\nTimes for mesh generation and refinement:" << std::endl;
+	
+    		}
+    		else if (point == "assembly") {
+    	
+    				std::cout << "\nTimes for system assembly:" << std::endl;
+    				    		
+    		}	
+	    	else if (point == "solving") {
+    	
+    				std::cout << "\nTimes for solution solving:" << std::endl;
+    		
+    		}
+    		else {
+    			return;
+    		}
+    		
+    		std::cout << "      Serial" << proc << ": " << elapsed() << " seconds." << std::endl;
+
 	    	start();	
 	    	
 	    }

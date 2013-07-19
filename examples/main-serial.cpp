@@ -31,7 +31,6 @@ int main(int argc, char *argv[]){
     
     int numRefine = atoi(argv[2]);
     bool timings =  atoi(argv[4]);
-    int rank = -1;
     
     /* *** parse solver input */
     Solver solver;
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]){
 	GeMatrix coordinates;
 	readMesh(argv[1],coordinates, elements, dirichlet, neumann);
 	
-	timer.out(rank, "load", timings);
+	timer.outNoMPI("load", timings);
 	
 	/* *** create and refine mesh */
 	Mesh mesh(coordinates, elements, dirichlet,neumann);
@@ -68,19 +67,19 @@ int main(int argc, char *argv[]){
 	   	mesh.refineRed();
 	}
 	
-	timer.out(rank, "mesh", timings);
+	timer.outNoMPI("mesh", timings);
   
     /* *** create fem object and assemble linear system */
     FEM<flens::MethNonMPI> fem(mesh, f, DirichletData, NeumannData);
 
     fem.assemble();
     
-    timer.out(rank, "assembly", timings);
+    timer.outNoMPI("assembly", timings);
 	
 	/* *** solve problem using specified method */
     fem.solve(solver);
     
-    timer.out(rank, "solving", timings);
+    timer.outNoMPI("solving", timings);
 
 	/* *** write solution to file */
 	fem.writeSolution();
