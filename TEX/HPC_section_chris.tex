@@ -6,10 +6,14 @@ The basis of this lecture course has been the parallelisation of various numeric
 FLENS (\emph{Flexible Library for Efficient Numerical Solutions}) is a C++ library written by Dr. Michael Lehn, which offers a comprehensive collection of matrix and vector types. Included is a C++ -based BLAS (\emph{Basic Linear Algebra Subfunctions} implementation, which provides linear algebra operations, such as matrix-vector multiplication, on these types. 
 
 The advantages of using the FLENS in the FEM package are numerous. Firstly, use of an external library for matrix/vector types adds some standardisation to the package, aiding, for example, a user who is new to the FEM package, but has experience of the FLENS from other projects. Secondly, the library can be linked, with almost trivial effort, to any optimised BLAS or LAPACK libraries available, such as \emph{ATLAS} or \emph{Goto BLAS}, for instant speed improvements of BLAS operations. Thirdly, the FLENS offers overloaded operators for the BLAS operations. We recognise that users from different backgrounds may have a preference regarding the noation used for linear algebra operations, be it the tradition BLAS notation:
-\shellcmd{blas::mv(NoTrans, One, A, p, Zero, Ap)}
+\begin{lstlisting}
+   blas::mv(NoTrans, One, A, p, Zero, Ap);
+\end{lstlisting}
 or a notation more akin to that of MATLAB:
-\shellcmd{Ap = A*p}
-(for a matrix A, vector p). With FLENS, we have the choice.
+\begin{lstlisting}
+   Ap = A*p;
+\end{lstlisting}
+(for matrix A, vector p). With FLENS, we have the choice.
 
 We therefore summarise the aims of this project as follows:
 \begin{enumerate}
@@ -30,25 +34,29 @@ We adopt the following direct conversions from the FEM package to FLENS framewor
 \begin{equation*}
 \begin{array}{rcl}
    \mbox{\texttt{Vector}}  &  \rightarrow  &  \mbox{\texttt{DenseVector\<Array\<\double\> \>}} \\
-   \mbox{IndexVector} & \rightarrow & \mbox{\texttt{DenseVector\<Array\<\int\> \>}}
+   \mbox{\texttt{IndexVector}} & \rightarrow & \mbox{\texttt{DenseVector\<Array\<\int\> \>}}
 \end{array}
 \end{equation*}
 
 However, we must note that the default index base in FLENS, which we are using here, is 1, as opposed to that of the package, which is 0. We make this change, despite the awkwardness it adds to the transition, because this is the natural index base regarding the mesh geometry. Numbering of the mesh nodes starts at 1, and assembly of the system of linear equations frequently accesses vector elements corresponding to node identities. For example in the FEM package:
 
 \begin{lstlisting}
-   vec_FEMpackage(nodeID - 1) = someValue
+   someVec_FEMpackage(nodeID - 1) = someValue;
 \end{lstlisting}
 
 as opposed to using FLENS:
 
 \begin{lstlisting}
-   vec_FLENS(nodeID) = someValue
+   someVec_FLENS(nodeID) = someValue;
 \end{lstlisting}
 
-Whilst this is purely cosmetic, it may help avoid bugs caused by forgetting to subtract 1 from node identities. 
+Whilst this is purely cosmetic, it may help to avoid bugs caused by forgetting to subtract 1 from node identities. For consistency, we implemented all FLENS matrices/vectors with index base 1.
 
-\subsection{TypeI and TypeII}
+FLENS includes a storage scheme for sparse matrices of CRS (Column-Row-Storage) type, offering an alternative to the FEM package's CRSMatrix type. However, these must be initialised from a FLENS sparse matrix with a coordinate storage scheme, effecting a change in the implementation of the type, but not requiring the creation of a custom type.
+
+??? Mazen's CRS sorting?
+
+\subsection{TypeI and TypeII}\label{subsc:typeI_II}
 
 The FEM package uses the nomenclature defined in the lecture course, of \emph{TypeI} and \emph{TypeII} to distinguish between vectors that contain values corresponding to the problem posed on a compute node's local mesh, or on the global mesh:
 
@@ -57,11 +65,38 @@ The FEM package uses the nomenclature defined in the lecture course, of \emph{Ty
    \item \textbf{TypeII}: local values.
 \end{itemize}
 
-We adopt this definition here.
+We adopt this definition in this paper and in our code.
 
 \subsection{FLENSDataVector}
 
-Firstly, we propose a FLENS-based replacement to the FEM package's \emph{DataVector} class. This class stores its vector values in 
+The FEM package's \emph{DataVector} class is the package's primary custom vector type. Included members are:
+\begin{itemize}
+   \item Vector object: stores the values of the DataVector.
+   \item Coupling object: contains mesh geometry information required for MPI communications.
+   \item A vectorType enumerated type: determines the `type' of the vector, as defined in Section \ref{subsc:typeI_II}.
+\end{itemize}
+
+We propose a FLENS-based replacement for this class called FLENSDataVector, with a few small yet profound modifications to the structure.
+
+Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\<\double\> \>} to store our vector values. However, we choose to \emph{derive} our class from this FLENS type, rather than specifying a \texttt{DenseVector} as a member object. I.e. we use a `is-a' \texttt{DenseVector} approach, rather than a `has-a' approach. The advantage here is that our class inherits all methods and overloaded operator from the \texttt{DenseVector} class, and can be passed directly to the FLENS BLAS functions. This lends itself to a more parsimonious implementation - under the `has-a' approach, we would need to overload every BLAS function, and clutter our FLENSDataVector class with trivial operators, such as:
+
+\begin{lstlisting}
+   double &
+   operator()(int index) {
+   	return vec(index);
+   }
+\end{lstlisting}
+
+or
+
+\begin{lstlisting}
+   double
+   dot(FLENSDataVector x, FLENSDataVector y) {
+   	blas::dot(x.vec, y.vec);
+   }
+\end{lstlisting}
+
+This class stores its vector values in 
 
 
 
