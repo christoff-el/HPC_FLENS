@@ -110,7 +110,7 @@ public:
     			return;
     		}
     		
-    		std::cout << "      Serial" << proc << ": " << elapsed() << " seconds." << std::endl;
+    		std::cout << "      Serial: " << elapsed() << " seconds." << std::endl;
 
 	    	start();	
 	    	
