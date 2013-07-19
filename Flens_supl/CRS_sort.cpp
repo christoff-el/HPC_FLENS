@@ -5,46 +5,48 @@
 
 namespace flens{
 
+template <typename DVector, typename IVector>
 void
-CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values)
+CRS_sort(DVector &_data, IVector &row, IVector &col, DVector &values)
 {
 	//--- Typedefs for FLENS
-    // Used to set values from a C-Array
-    typedef flens::DenseVector<flens::Array<int>::View> 	VecView;
-    typedef flens::Array<int>::View 						View;
+	typedef typename DVector::ElementType									ElementType;
+	typedef typename IVector::ElementType									IndexType;
+    typedef flens::DenseVector<typename flens::Array<ElementType>::View> 	VecView;
+    typedef typename flens::Array<ElementType>::View 						View;
     //--- Typedefs for FLENS
 
 
-	int idx, rowidx, rowdiff, offset, length=row.length();
+	IndexType idx, rowidx, rowdiff, offset, length=row.length();
 	/* *** determine number of rows and cols */
-	int nRow=0,nCol=0;
-	for(int k=1; k<=length; ++k)
+	IndexType nRow=0,nCol=0;
+	for(IndexType k=1; k<=length; ++k)
 	{
 		if(row(k)>nRow) nRow=row(k);
 		if(col(k)>nCol) nCol=col(k);
 	}
 	
 	/* *** initialize temporary variables */
-	int* data 		= new int[length];
-	int* colindex 	= new int[length];
-	int* rowptr 	= new int[nRow+1];
-	int* rowoff 	= new int[nRow];
-	memset(rowptr,0,(nRow+1)*sizeof(int));
+	ElementType* data 		= new ElementType[length];
+	IndexType* colindex 	= new IndexType[length];
+	IndexType* rowptr 		= new IndexType[nRow+1];
+	IndexType* rowoff 		= new IndexType[nRow];
+	memset(rowptr,0,(nRow+1)*sizeof(IndexType));
 
 	/* *** create rowptr */
-	for(int k=1 ; k<=length; ++k)
+	for(IndexType k=1 ; k<=length; ++k)
 	{
 		++rowptr[row(k)];
 	}
 	
-	for(int k=1 ; k<nRow ; ++k)
+	for(IndexType k=1 ; k<nRow ; ++k)
 	{
 		rowptr[k+1] = rowptr[k+1]+rowptr[k];
 	}
 
-	memcpy(rowoff,rowptr,nRow*sizeof(int));
+	memcpy(rowoff,rowptr,nRow*sizeof(IndexType));
 	/* *** copy column index and values */
-	for(int k=1; k<=length; ++k)
+	for(IndexType k=1; k<=length; ++k)
 	{
 		idx = rowoff[row(k)-1];
 		++rowoff[row(k)-1];
@@ -52,7 +54,7 @@ CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values)
 		colindex[idx] = col(k);
 	}
 	/* *** sort values of each row */
-	for(int k=0; k<nRow; ++k)
+	for(IndexType k=0; k<nRow; ++k)
 	{
 		if(rowptr[k+1]>rowptr[k])
 		{
@@ -62,7 +64,7 @@ CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values)
 	
 	/* *** sum up entries with same indices and compress the data structures */
 	idx=0; rowidx=0; rowdiff=0;
-	for(int k=0; k<length;)
+	for(IndexType k=0; k<length;)
 	{
 		while(rowptr[rowidx+1]==k)
 		{
@@ -101,15 +103,15 @@ CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values)
 	delete[] rowoff;
 };
 
-
+template <typename Data, typename Index>
 void
-CRS_insort(int * index, int* data, int length)
+CRS_insort(Index* index, Data* data, Index length)
 {
-	int val_i; 
-	int val_d;
-	int j;
+	Index val_i; 
+	Data val_d;
+	Index j;
 
-	for(int i=1; i<length; ++i)
+	for(Index i=1; i<length; ++i)
 	{
 		val_i = index[i]; val_d = data[i];
 		j = i - 1;

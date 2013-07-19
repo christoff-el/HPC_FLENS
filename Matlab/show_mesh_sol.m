@@ -3,7 +3,7 @@ function show_mesh_sol(elements, coordinates,  solution , varargin)
 
  % triplot(elements',coordinates(1,:)',coordinates(2,:)', 'Color', 'g');
 % figure;
-  trisurf(elements,coordinates(:,1),coordinates(:,2),solution,'facecolor','interp')
+  trisurf(elements,coordinates(:,1),coordinates(:,2),solution,'facecolor','interp','edgecolor','none')
 %   figure
 %   [isolinex,isoliney] = isolines(elements,coordinates,solution(elements),100);
 %   plot(isolinex',isoliney','k-','linewidth',0.8);

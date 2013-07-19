@@ -7,6 +7,7 @@
 #include "../Flens_supl/FlensHeader.h"
 #include "../Fem/FemHeader.hpp"
 #include "functions.hpp"
+#include "timer.h"
 
 using namespace std;
 
@@ -17,17 +18,23 @@ typedef flens::GeMatrix<flens::FullStorage<int> > 	 IMatrix;
 
 int main(int argc, char *argv[]){
 
+	Timer timer;
+	timer.start();
+	
 	/* *** check input parameters */
-    if (argc!=3) {
-        cerr << "usage: " << argv[0] << "  example_directory, solver" << endl;
+    if (argc!=5) {
+        cerr << "usage: " << argv[0] << "  example_directory, #refinements, solver, timings" << endl;
         exit(-1);
     }
     char directory [256]  = "";
     strcat(directory,argv[1]);
     
+    int numRefine = atoi(argv[2]);
+    bool timings =  atoi(argv[4]);
+    
     /* *** parse solver input */
     Solver solver;
-    string chosen_solver = argv[2];
+    string chosen_solver = argv[3];
      if (chosen_solver == "cg" || chosen_solver == "CG") {
     
     	solver = cg;
@@ -50,18 +57,29 @@ int main(int argc, char *argv[]){
 	GeMatrix coordinates;
 	readMesh(argv[1],coordinates, elements, dirichlet, neumann);
 	
+	timer.outNoMPI("load", timings);
+	
 	/* *** create and refine mesh */
 	Mesh mesh(coordinates, elements, dirichlet,neumann);
-	mesh.refineRed();
-	mesh.refineRed();
+	
+	/* *** refine */
+    for (int i=0; i<numRefine; ++i) {
+	   	mesh.refineRed();
+	}
+	
+	timer.outNoMPI("mesh", timings);
   
     /* *** create fem object and assemble linear system */
     FEM<flens::MethNonMPI> fem(mesh, f, DirichletData, NeumannData);
 
     fem.assemble();
+    
+    timer.outNoMPI("assembly", timings);
 	
 	/* *** solve problem using specified method */
     fem.solve(solver);
+    
+    timer.outNoMPI("solving", timings);
 
 	/* *** write solution to file */
 	fem.writeSolution();

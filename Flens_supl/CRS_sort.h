@@ -9,13 +9,16 @@ typedef flens::DenseVector<flens::Array<int> > 		IVector;
 
 namespace flens{
 
+template <typename DVector, typename IVector>
 void
-CRS_sort(IVector &_data, IVector &row, IVector &col, IVector &values);
+CRS_sort(DVector &_data, IVector &row, IVector &col, DVector &values);
 
+template <typename Data, typename Index>
 void
-CRS_insort(int* index, int* data, int length);
+CRS_insort(Index* index, Data* data, Index length);
 
 }; //namespace flens
 
+#include "CRS_sort.cpp"
 
 #endif //CRS_SORT_H
