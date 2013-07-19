@@ -4,9 +4,6 @@
 #include <stdio.h>
 #include <flens/flens.cxx>
 
-typedef flens::DenseVector<flens::Array<double> > 	DVector;
-typedef flens::DenseVector<flens::Array<int> > 		IVector;
-
 namespace flens{
 
 template <typename DVector, typename IVector>
