@@ -7,7 +7,7 @@
 #$ -j y
 
 # Send notification emails to:
-#$ -M chrisdavis132@gmail.com
+# -M 
 # Send on beginning, end, abortion, suspension:
 #$ -m abes
 
@@ -18,9 +18,8 @@
 # Specify we want nodes with only 1 processor:
 #$ -q single.q
 
-# Single processor nodes are all dual core, so we need to say we require
-#  8 processing units (to be allocated 4 nodes):
-#$ -pe mpich 8
+# Only need one processor here:
+#$ -pe mpich 1
 #$ -N davis_hpc
 
 # Module
@@ -37,34 +36,34 @@ cd ./examples
 # Get times for different mesh refinements:
 
 echo "cg 5"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 5 cg 1
+./main-serial ./input/Square_one_domain 5 cg 1
 
 echo "cg 6"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 6 cg 1
+./main-serial ./input/Square_one_domain 6 cg 1
 
 echo "cg 7"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 cg 1
+./main-serial ./input/Square_one_domain 7 cg 1
 
 echo "cg 8"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 8 cg 1
+./main-serial ./input/Square_one_domain 8 cg 1
 
 echo "cg 9"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 cg 1
+./main-serial ./input/Square_one_domain 9 cg 1
 
 echo "gs 5"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 5 gs 1
+./main-serial ./input/Square_one_domain 5 gs 1
 
 echo "gs 6"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 6 gs 1
+./main-serial ./input/Square_one_domain 6 gs 1
 
 echo "gs 7"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 gs 1
+./main-serial ./input/Square_one_domain 7 gs 1
 
 echo "gs 8"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 8 gs 1
+./main-serial ./input/Square_one_domain 8 gs 1
 
 echo "gs 9"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 gs 1
+./main-serial ./input/Square_one_domain 9 gs 1
 
 
 echo "habe $NSLOTS Prozessor"
