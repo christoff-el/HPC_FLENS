@@ -9,7 +9,7 @@
 # Send notification emails to:
 # -M 
 # Send on beginning, end, abortion, suspension:
-#$ -m abes
+# -m abes
 
 # requested wall clock time
 #$ -l h_rt=2:00:00
