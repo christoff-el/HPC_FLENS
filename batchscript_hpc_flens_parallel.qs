@@ -21,7 +21,7 @@
 # Single processor nodes are all dual core, so we need to say we require
 #  8 processing units (to be allocated 4 nodes):
 #$ -pe mpich 8
-#$ -N davis_hpc
+#$ -N hpc_parallel
 
 # Module
 module load gcc/4.7.2

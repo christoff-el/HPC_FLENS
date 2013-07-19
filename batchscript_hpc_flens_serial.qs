@@ -20,7 +20,7 @@
 
 # Only need one processor here:
 #$ -pe mpich 1
-#$ -N davis_hpc
+#$ -N hpc_serial
 
 # Module
 module load gcc/4.7.2
