@@ -67,19 +67,19 @@ int main(int argc, char *argv[]){
 	   	mesh.refineRed();
 	}
 	
-	timer.out(rank, "mesh", timings);
+	timer.out(0, "mesh", timings);
   
     /* *** create fem object and assemble linear system */
     FEM<flens::MethNonMPI> fem(mesh, f, DirichletData, NeumannData);
 
     fem.assemble();
     
-    timer.out(rank, "assembly", timings);
+    timer.out(0, "assembly", timings);
 	
 	/* *** solve problem using specified method */
     fem.solve(solver);
     
-    timer.out(rank, "solving", timings);
+    timer.out(0, "solving", timings);
 
 	/* *** write solution to file */
 	fem.writeSolution();
