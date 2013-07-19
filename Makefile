@@ -1,4 +1,4 @@
-subdirs = LinearAlgebra Flens_supl Fem examples
+subdirs = Flens_supl Fem examples
 .PHONY: all clean
 all:
 	for i in $(subdirs); do (cd $$i && $(MAKE)) || exit 1; done

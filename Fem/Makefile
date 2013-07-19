@@ -21,7 +21,7 @@ endif
 CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include -I/usr/local/FLENS -std=c++11 -c
 
 
-all: Coupling.o DataVector.o MathOperationsMPI.o Mesh.o Solver.o Fem.o libFem.a
+all: Coupling.o Mesh.o Fem.o libFem.a
 Coupling.o:  Coupling.cpp Coupling.hpp 
 	$(CC) $(CPPFLAGS)  Coupling.cpp
 DataVector.o:  Mesh.o DataVector.cpp DataVector.hpp 
@@ -32,12 +32,12 @@ Mesh.o:  Coupling.o Mesh.cpp Mesh.hpp
 	$(CC) $(CPPFLAGS)  Mesh.cpp
 Solver.o:  Mesh.o MathOperationsMPI.o DataVector.o Solver.cpp Solver.hpp 
 	$(CC) $(CPPFLAGS)  Solver.cpp
-Fem.o: Mesh.o DataVector.o Solver.o Fem.cpp Fem.hpp
+Fem.o: Mesh.o Fem.cpp Fem.hpp
 	$(CC) $(CPPFLAGS) Fem.cpp
 
 
-libFem.a:Coupling.o DataVector.o MathOperationsMPI.o Mesh.o Solver.o Fem.o
-	ar rcu libFem.a  Coupling.o DataVector.o MathOperationsMPI.o Mesh.o Solver.o Fem.o
+libFem.a:Coupling.o Mesh.o Fem.o
+	ar rcu libFem.a  Coupling.o Mesh.o Fem.o
 
 
 clean:

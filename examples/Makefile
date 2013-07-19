@@ -1,7 +1,7 @@
 OS = $(shell uname -s)
 
-LDFLAGS  := -L../Fem -L../Flens_supl -L../LinearAlgebra
-LDLIBS	 := -lFem -lFlens -lLinAlg
+LDFLAGS  := -L../Fem -L../Flens_supl
+LDLIBS	 := -lFem -lFlens
 
 ifeq ($(OS),Darwin)
   CC  := mpic++
