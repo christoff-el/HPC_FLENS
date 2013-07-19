@@ -1,5 +1,5 @@
 
-\Section{Introduction}
+\section{Introduction}
 
 The basis of this lecture course has been the parallelisation of various numerical methods, with a particular focus on the Finite Element Method. For this project we have been supplied with a software package (which we shall henceforth call \emph{the FEM package}) that computes the solution to the Poisson partial differential equation using the Finite Element Method. This package is self contained - it includes its own custom matrix/vector types, and its own implementations of linear algebra operations on these types. Our goal is to make improvements to the package with the help of the FLENS.
 
@@ -18,4 +18,51 @@ We therefore summarise the aims of this project as follows:
    \item Offer two versions of solvers, one with BLAS notation, one with overloaded operators.
 \end{enumerate}
 
-Thus it is worth noting that we are primarily 
+Thus it is worth noting that we are primarily improving the existing implementation from a software design point of view, with possible performance improvements, rather than adding new methods.
+
+\section{Matrix and Vector Types}
+
+A major part of converting the FEM package to the FLENS framework is the transition from the package's custom storage types to FLENS-based types. Of course, some types, such as the package's \emph{Vector} class, have exact FLENS equivalents. Others, however, contain bespoke objects and methods for the MPI communications. Thus we must create our own custom storage types in these cases.
+
+\subsection{Equivalent Types and Index Base}
+
+We adopt the following direct conversions from the FEM package to FLENS framework:
+\begin{equation*}
+\begin{array}{rcl}
+   \mbox{\texttt{Vector}}  &  \rightarrow  &  \mbox{\texttt{DenseVector\<Array\<\double\> \>}} \\
+   \mbox{IndexVector} & \rightarrow & \mbox{\texttt{DenseVector\<Array\<\int\> \>}}
+\end{array}
+\end{equation*}
+
+However, we must note that the default index base in FLENS, which we are using here, is 1, as opposed to that of the package, which is 0. We make this change, despite the awkwardness it adds to the transition, because this is the natural index base regarding the mesh geometry. Numbering of the mesh nodes starts at 1, and assembly of the system of linear equations frequently accesses vector elements corresponding to node identities. For example in the FEM package:
+
+\begin{lstlisting}
+   vec_FEMpackage(nodeID - 1) = someValue
+\end{lstlisting}
+
+as opposed to using FLENS:
+
+\begin{lstlisting}
+   vec_FLENS(nodeID) = someValue
+\end{lstlisting}
+
+Whilst this is purely cosmetic, it may help avoid bugs caused by forgetting to subtract 1 from node identities. 
+
+\subsection{TypeI and TypeII}
+
+The FEM package uses the nomenclature defined in the lecture course, of \emph{TypeI} and \emph{TypeII} to distinguish between vectors that contain values corresponding to the problem posed on a compute node's local mesh, or on the global mesh:
+
+\begin {itemize}
+   \item \textbf{TypeI}: global values.
+   \item \textbf{TypeII}: local values.
+\end{itemize}
+
+We adopt this definition here.
+
+\subsection{FLENSDataVector}
+
+Firstly, we propose a FLENS-based replacement to the FEM package's \emph{DataVector} class. This class stores its vector values in 
+
+
+
+We can simply replace all instances of \emph{Vectors} with FLENS 

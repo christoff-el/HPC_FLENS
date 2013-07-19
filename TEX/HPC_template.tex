@@ -60,6 +60,21 @@
 \let\endchangemargin=\endlist 
 %\usepackage{algpseudocode}
 
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{myback}{HTML}{FFFFCC}
+\lstset{language=C++,
+backgroundcolor=\color{myback},
+breaklines=true,
+commentstyle=\itshape\color{green!40!black},
+frame=L,
+numbers=left,
+basicstyle=\footnotesize\ttfamily,
+identifierstyle=\color{blue},
+stringstyle=\color{orange},
+keepspaces=true,
+keywordstyle=\color{red}}
+
 \relpenalty=9999
 \binoppenalty=9999
 
@@ -146,6 +161,13 @@
 \newcommand{\OO}{\ensuremath{\mathbf{0}}}
 %\newcommand{\norm}[1]{\ensuremath{\parallel #1 \parallel}}
 \newcommand{\sgn}{\mathrm{sgn}}
+
+\newcommand{\<}{$\langle$}
+\let\>=\undefined
+\newcommand{\>}{$\rangle$}
+\newcommand{\double}{{\color{blue}double}}
+\let\int=\undefined
+\newcommand{\int}{{\color{blue}int}}
 
 \pagestyle{headings}
 \begin{document}
