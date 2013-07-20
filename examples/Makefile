@@ -25,9 +25,15 @@ endif
 
 CPPFLAGS = -Wall -I. -I.. -I../Flens_supl -I../Fem -I/opt/local/include/openmpi $(IFLENS) -std=c++11
 
-.PHONY:   all clean
+.PHONY:   all clean goto
 
 all: main-serial main-parallel 
+
+goto: LDFLAGS  +=-L../../gotoins/lib
+goto: LDLIBS   +=-lopenblas
+goto: IFLENS   :=-I../../FLENS -DWITH_GOTOBLAS -I../../gotoins/include
+goto: main-serial main-parallel
+
 main-serial: main-serial.cpp
 	$(CC) $(LDFLAGS) $(CPPFLAGS) main-serial.cpp -o main-serial $(LDLIBS)
 main-parallel: main-parallel.cpp
@@ -35,3 +41,4 @@ main-parallel: main-parallel.cpp
 
 clean:
 	rm -f main-serial main-parallel *.o 
+

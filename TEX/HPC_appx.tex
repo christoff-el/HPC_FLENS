@@ -1,0 +1,90 @@
+%Appendix
+\newpage
+\appendix
+\section{Appendix}
+
+In this appendix we offer instructions on how to set up and run our software package on both a desktop computer and on the pacioli compute cluster. We assume the target device is of the UNIX family, and already has the following:
+
+\begin{itemize}
+   \item gcc of at least version 4.7
+   \item git
+   \item MPI
+\end{itemize}
+
+\subsection{Desktop}
+
+\begin{enumerate}
+   \item Make a new directory where you would like the magic to happen.
+   \shellcmd{mkdir FEMtastic}
+   \item Add our package (the directory called HPC\_FLENS) to this new directory.
+   \item Get and build FLENS: 
+   \shellcmd{git clone https://github.com/michael-lehn/FLENS.git}
+   \shellcmd{cd ./FLENS}
+   \shellcmd{make}
+   \shellcmd{cd ..}
+   
+   \item Our makefiles assume FLENS is located under /usr/local/FLENS, so copy it there. If this isn't possible, the makefiles will require minor modification.
+   \shellcmd{cp -rvf ./FLENS /usr/local/FLENS}
+   
+   \item Build our package:
+   \shellcmd{cd ./HPC\_FLENS}
+   \shellcmd{make}
+   
+   \item Run our package.\\
+   Replace n with the number of mesh refinements you desire (less than 8 is sensible), and cg can be replaced by gs if you have a lot of time on your hands:
+   
+   \begin{enumerate}
+   
+      \item Serial implementation:
+      \shellcmd{./main-serial ./input/Square\_one\_domain n cg 1}
+      \item Parallel implementation:
+      \shellcmd{mpirun -np 4 main-parallel ./input/Square\_four\_domains n cg 1}
+      
+   \end{enumerate}
+   
+   \item Sit back and watch it work its magic.
+\end{enumerate}
+      
+\subsection{Pacioli}
+
+\begin{enumerate}
+   \item Log in to pacioli and make a new directory where you would like the magic to happen.
+   \shellcmd{mkdir FEMtastic}
+   \item Use scp to add our package (the directory called HPC\_FLENS) to this new directory.
+   \item Get and build FLENS: 
+   \shellcmd{git clone https://github.com/michael-lehn/FLENS.git}
+   \shellcmd{cd ./FLENS}
+   \shellcmd{make}
+   \shellcmd{cd ..}\\
+   (no copying of FLENS to /usr/local is required here, our makefiles know we're now on Pacioli $\ddot\smile$).
+   
+   \item Load modules:
+   \shellcmd{module load gcc/4.7.2}
+   \shellcmd{module load sge/6.2u5}
+   \shellcmd{module load openmpi/gcc/64/1.4.2}
+   
+   \item Build our package:
+   \shellcmd{cd ./HPC\_FLENS}
+   \shellcmd{make}
+   
+   \item Submit the appropriate jobscript to the queue (modify the commands in it first, if you so wish):
+   
+   \begin{enumerate}
+   \item Serial:
+   \shellcmd{qsub batchscript\_hpc\_flens\_serial.qs}
+   
+   \item Parallel:
+   \shellcmd{qsub batchscript\_hpc\_flens\_parallel.qs}
+   
+   \end{enumerate}
+   
+   \item Wait for the job to be processed. Since the parallel version demands exclusive use of 4 nodes, this may take some time if the queue is busy. Once complete, there will be an output file created in the HPC\_FLENS directory.
+      
+      
+ \end{enumerate}
+ 
+ \subsection{GotoBLAS}
+ 
+ 
+      
+      

@@ -21,12 +21,13 @@
 # Single processor nodes are all dual core, so we need to say we require
 #  8 processing units (to be allocated 4 nodes):
 #$ -pe mpich 8
-#$ -N hpc_parallel
+#$ -N hpc_parallel_goto
 
 # Module
 module load gcc/4.7.2
 module load sge/6.2u5
 module load openmpi/gcc/64/1.4.2
+export LD_LIBRARY_PATH=/home/davis/gotoins/lib:$LD_LIBRARY_PATH
 
 # Befehle
 cd ./examples

@@ -24,11 +24,13 @@ We therefore summarise the aims of this project as follows:
 
 Thus it is worth noting that we are primarily improving the existing implementation from a software design point of view, with possible performance improvements, rather than adding new methods.
 
-\section{Matrix and Vector Types}
+\section{Part I (Christopher Davis)}
+
+\subsection{Matrix and Vector Types}
 
 A major part of converting the FEM package to the FLENS framework is the transition from the package's custom storage types to FLENS-based types. Of course, some types, such as the package's \emph{Vector} class, have exact FLENS equivalents. Others, however, contain bespoke objects and methods for the MPI communications. Thus we must create our own custom storage types in these cases.
 
-\subsection{Equivalent Types and Index Base}
+\subsubsection{Equivalent Types and Index Base}
 
 We adopt the following direct conversions from the FEM package to FLENS framework:
 \begin{equation*}
@@ -54,9 +56,7 @@ Whilst this is purely cosmetic, it may help to avoid bugs caused by forgetting t
 
 FLENS includes a storage scheme for sparse matrices of CRS (Column-Row-Storage) type, offering an alternative to the FEM package's CRSMatrix type. However, these must be initialised from a FLENS sparse matrix with a coordinate storage scheme, effecting a change in the implementation of the type, but not requiring the creation of a custom type.
 
-??? Mazen's CRS sorting?
-
-\subsection{TypeI and TypeII}\label{subsc:typeI_II}
+\subsubsection{TypeI and TypeII}\label{subsc:typeI_II}
 
 The FEM package uses the nomenclature defined in the lecture course, of \emph{TypeI} and \emph{TypeII} to distinguish between vectors that contain values corresponding to the problem posed on a compute node's local mesh, or on the global mesh:
 
@@ -67,7 +67,7 @@ The FEM package uses the nomenclature defined in the lecture course, of \emph{Ty
 
 We adopt this definition in this paper and in our code, and refer to these types as \emph{MPI vector types}.
 
-\subsection{FLENSDataVector} (Christopher Davis)
+\subsubsection{FLENSDataVector} (Christopher Davis)
 
 The FEM package's \emph{DataVector} class is the package's primary custom vector type. Included members are:
 \begin{itemize}
@@ -150,7 +150,7 @@ myVec.typeII_2_I();		<-- perfect
 //myVec.typeI_2_II();		<-- would cause compiler error
 \end{lstlisting}
 
-\subsection{BLAS Overloading}
+\subsubsection{BLAS Overloading}
 
 Most BLAS functions can be used in the FEM package in their usual form. The copy and dot product functions, however, require attention.
 
@@ -210,27 +210,45 @@ p = A*x;
 r2 = r2 - p;
 \end{lstlisting}
 
-The CG solver containing this notation is contained in Flens_supl/overloaded. Its functionality does not differ.
+The CG solver containing this notation is contained in Flens\_supl/overloaded. Its functionality does not differ.
 
 \subsubsection{Testing}
+
 
 Here we undertake some benchmarking on the Pacioli compute cluster. We examine the performance of the new FEM implementation, with respect to:
 \begin{enumerate}
    \item Serial vs. parallel performance.
-   \item Performance boost from GotoBLAS
+   \item Performance boost from GotoBLAS (provided by the OpenBLAS library).
 \end{enumerate}
 
-\begin{figure}
+Testing was conducted using a mesh with four domains (hence requiring 4 computation processes). For full homogeneity, the program was executed such that each process was run on separate (identical) nodes, rather than making use of multiple processors/cores on single nodes. Thus all process communications were performed over the Infiniband network using the MPI. 
+
+Figure \ref{fig:assembly} shows the compute times required to assemble the FEM system. This part of computation requires no communication between processes, and incorporates no BLAS subroutines. The results follow our logical predictions, and can be summarised as follows:
+\begin{itemize}
+   \item The parallel implementation is, on average, 4.2x faster than the serial implementation for a given number of mesh elements.
+   \item GotoBLAS is of no benefit here.
+\end{itemize}
+
+Figure \ref{fig:solver} shows the compute times required to solve the system of linear equations. This part of computation does require communication between processes, and does make extensive use of BLAS subroutines. The results again follow our predictions, and can be summarised as follows:
+\begin{itemize}
+   \item The parallel implementation is, on average, only 1.8x faster than the serial implementation for a given number of mesh elements. Thus we see that the communication here acts as a bottleneck, with a detrimental effect on compute times. 
+   \item The near-trivial linking of the OpenBLAS library effects a 1.34x performance increase in the serial implementation, and a 1.43x performance increase in the parallel implementation, on average. This `free' improvement was only possible due to the use of FLENS.
+\end{itemize}
+\begin{figure}[H]
       \centering
       \newlength\figureheight
       \newlength\figurewidth
-      \setlength\figureheight{8cm}
-      \setlength\figurewidth{8cm}
+      \setlength\figureheight{7cm}
+      \setlength\figurewidth{10cm}
       \input{./Grafiken/assemblyPlot.tikz}
       \caption{Compute times to perform system assembly.}
       \label{fig:assembly}
-
-
-This class stores its vector values in 
-
-Furthermore, now that we have a 
+\end{figure}
+\begin{figure}[H]
+      \centering
+      \setlength\figureheight{7cm}
+      \setlength\figurewidth{10cm}
+      \input{./Grafiken/solvePlot.tikz}
+      \caption{Compute times to perform system assembly.}
+      \label{fig:solver}
+\end{figure}

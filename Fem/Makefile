@@ -10,7 +10,7 @@ else
   IFLENS   := -I/usr/local/FLENS
 endif
 
-.PHONY: all clean
+.PHONY: all clean goto
 
 ifeq ($(OS),Darwin)
   CC  := mpic++
@@ -29,6 +29,12 @@ CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include 
 
 
 all: Coupling.o Mesh.o Fem.o libFem.a
+
+goto: LDFLAGS  +=-L../../gotoins/lib
+goto: LDLIBS   +=-lopenblas
+goto: IFLENS   :=-I../../FLENS -DWITH_GOTOBLAS -I../../gotoins/include
+goto: Coupling.o Mesh.o Fem.o libFem.a
+
 Coupling.o:  Coupling.cpp Coupling.hpp 
 	$(CC) $(CPPFLAGS)  Coupling.cpp
 DataVector.o:  Mesh.o DataVector.cpp DataVector.hpp 
@@ -40,7 +46,7 @@ Mesh.o:  Coupling.o Mesh.cpp Mesh.hpp
 Solver.o:  Mesh.o MathOperationsMPI.o DataVector.o Solver.cpp Solver.hpp 
 	$(CC) $(CPPFLAGS)  Solver.cpp
 Fem.o: Mesh.o Fem.cpp Fem.hpp
-	$(CC) $(CPPFLAGS) Fem.cpp
+	$(CC) $(CPPFLAGS)  Fem.cpp
 
 
 libFem.a:Coupling.o Mesh.o Fem.o
