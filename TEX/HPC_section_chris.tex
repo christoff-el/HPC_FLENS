@@ -18,7 +18,7 @@ or a notation more akin to that of MATLAB:
 We therefore summarise the aims of this project as follows:
 \begin{enumerate}
    \item Replace all data storage objects with FLENS-based objects.
-   \item Where possible, replace linear algebra operations with their BLAS equivalents.
+   \item Where possible, replace linear algebra operations with their BLAS equivalents, for speed-up from optimised BLAS libraries.
    \item Offer two versions of solvers, one with BLAS notation, one with overloaded operators.
 \end{enumerate}
 
@@ -67,7 +67,7 @@ The FEM package uses the nomenclature defined in the lecture course, of \emph{Ty
 
 We adopt this definition in this paper and in our code, and refer to these types as \emph{MPI vector types}.
 
-\subsection{FLENSDataVector}
+\subsection{FLENSDataVector} (Christopher Davis)
 
 The FEM package's \emph{DataVector} class is the package's primary custom vector type. Included members are:
 \begin{itemize}
@@ -97,12 +97,117 @@ and clutter our FLENSDataVector class with trivial operators, such as:
 
 neither of which are desirable.
 
-Next we consider the enumerated type that specifies the MPI vector type. Here we wish to change the structure somewhat - whilst setting the MPI vector type in this fashion is easy and flexible, allowing the type to be changed as and when required, we find this to be \emph{too} flexible, and far from ideal from a software design perspective. To better explain the situation, we consider hair colour as an analogy. 
+The Coupling object is stored as a constant reference - the same way as in the FEM package.
 
+Next we consider the enumerated type that specifies the MPI vector type. Here we wish to change the structure somewhat - whilst setting the MPI vector type in this fashion is easy and flexible, allowing the type to be changed as and when required, we find this to be \emph{too} flexible, and not ideal from a software design perspective. To help explain the situation, we consider a blind man and his socks. The man in question loves to wear socks, and therefore does so at all times. He commands an extensive collection, consisting of many different colours. Each morning he changes his socks, taking care to pair the dirty socks together so that they remain paired after washing. His system appears to work well - he always wears matching socks, and as a result leads a successful life. But what about if one morning whilst in the middle of changing his socks he is distracted by the telephone ringing, and as such forgets to change one of his socks - now his socks don't match! Whilst we would like to think that some kind person may notify him of his mistake, the world can be a cruel place. Odd socks are rarely tolerated by modern societies, so we can imaging that his life's achievements would probably crumble around him. Returning to the world of the FEM package, we hope that the difficulties that could arise from the enumerated type are clear - there is no way of determining whether the values contained in a TypeI DataVector are actually global values. There is always the chance that some rogue function changed the type without modifying the values. Such a problem would not make for an enjoyable debugging task.
+
+Thus our FLENSDataVector is implemented as a template class, requiring the MPI vector type to be defined (permanently) at instantiation. The following classes are permitted as specialisation types:
+\begin{itemize}
+   \item[-] \texttt{class FLvNonMPI}
+   \item[-] \texttt{class FLvTypeI}
+   \item[-] \texttt{class FLvTypeII}
+\end{itemize}
+
+Clever implementation of the FLENSDataVector constructors limits specialisation of the class to these types \emph{only}, as well as ensuring the specification of a Coupling object for MPI types (and not for the non-MPI). We use specialisations of the constructor function for these types, for example:
+\begin{lstlisting}
+template <>
+FLENSDataVector<FLvNonMPI>::FLENSDataVector(int n)
+	: 	DenseVector<Array<double> >(n),
+		coupling(Coupling())
+{
+	//Permits instatiation of FlNonMPI specialisation.
+}
+\end{lstlisting}
+
+and we add a line to the unspecialised constructor that will cause an error at \emph{compile time} if scope ever reaches there (which would be due to a wrong type specialisation):
+\begin{lstlisting}
+template <typename VTYPE>
+FLENSDataVector<VTYPE>::FLENSDataVector(int n)
+	:	coupling(Coupling())
+{
+	VTYPE::CHK;			//<-- If scope ever reaches here,
+					//compilation will fail.
+			//e.g. if FLENSDataVector<double> instantiated.
+}
+\end{lstlisting} 
+
+Thus the following instantiation would cause a compiler error:
+\begin{lstlisting}
+FLENSDataVector<double>  oops(5);
+\end{lstlisting}
+
+As such, we have limited the potential for undefined behaviour. 
+
+All communication-related member methods of the FEM package's DataVector are added to the FLENSDataVector with no significant changes. For conversion methods, we require the object to be of the destination type. For example:
+\begin{lstlisting}
+FLENSDataVector<FLvTypeI> myVec(5, Coupling());
+
+////////////////////////////////////
+// *** fill with local values *** //
+////////////////////////////////////
+
+myVec.typeII_2_I();		<-- perfect
+//myVec.typeI_2_II();		<-- would cause compiler error
+\end{lstlisting}
+
+\subsection{BLAS Overloading}
+
+Most BLAS functions can be used in the FEM package in their usual form. The copy and dot product functions, however, require attention.
+
+Copying between two FLENSDataVectors of the same MPI vector type can use the BLAS copy function without further assistance. The types match, and we can't do anything about the constant reference to the Coupling object (this must be left to the user to ensure). 
+
+When copying vectors of differeing MPI vector types, we overload the BLAS copy function. Within this overloaded function, we call the BLAS copy function to copy the vector values by \emph{upcasting} the FLENSDataVectors to their parent class \texttt{DenseVector\<Array\<\double\> \>}, then perform the appropriate conversion, for example:
+\begin{lstlisting}
+void
+copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
+{
+
+	//Copy data as usual (masquerading as a DenseVector :) ):
+	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
+		   *static_cast<DenseVector<Array<double> > *>(&dest));
+
+	//Perform vector type conversion:
+	dest.typeII_2_I();
+}
+\end{lstlisting}
+
+We use a similar technique for the dot product - the dot product of the two supplied vectors is calculated using BLAS via upcasting, and then the appropriate MPI communication is performed.
+
+By ensuring that our overloaded functions still use the FLENS BLAS implementation, we maintain the possibility for objective (2) in the Introduction.
+
+We point out that our use of `proper' object type to define the MPI vector types means that the many type asserts present in the FEM package's linear algebra subroutines, such as:
+\begin{lstlisting}
+double dot(DataVector &u, DataVector &v)
+{
+	if(u.type==nonMPI && v.type==nonMPI) 
+	  return u.values.dot(v.values);
+	
+	// we only multiply typeI and typeII vectors
+	assert(u.type != v.type);		//<--assert
+\end{lstlisting}
+are not required. All type checking is moved to compile time, a significant advantage in terms of both runtime efficiency and ease of debugging.
+
+\subsection{The CG Solver}
+
+\subsubsection{Implementation}
+
+In this section we look at the implementation of the conjugate gradient method for solving a system of linear equations. The solver was initially integrated into the FEM package via a wrapper, the details of which are described below in Section \ref{subsc:GS_solver}.
+
+The CG solver uses many linear algebra operations, and is therefore a prime candidate for using BLAS functions. For example, we replace FEM package lines such as:
+\begin{lstlisting}
+CRSmatVec(p,A,x);
+add(r2,p,-1.);
+\end{lstlisting}
+with the more universally recognised:
+\begin{lstlisting}
+blas::mv(NoTrans, One, A, x, Zero, p);
+blas::axpy(-One, p, r2);
+\end{lstlisting}
+
+As claimed in objective (3) in the Introduction, we also offer a version of the CG solver where such BLAS functions are overloaded, providing a MATLAB-style notation:
+\begin{lstlisting}
 
 
 This class stores its vector values in 
 
-
-
-We can simply replace all instances of \emph{Vectors} with FLENS 
+Furthermore, now that we have a 

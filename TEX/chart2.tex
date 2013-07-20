@@ -1,0 +1,22 @@
+% Chart wrappers
+
+% Define block styles
+\tikzstyle{block1} = [rectangle, draw, fill=orange!20, 
+    text width=5em, text centered, rounded corners, minimum height=1em]
+\tikzstyle{block2} = [rectangle, draw, fill=orange!20, 
+    text width=5em, text centered, rounded corners, minimum height=1em]
+\tikzstyle{block3} = [rectangle, draw, fill=orange!20, 
+    text width=5em, text centered, rounded corners, minimum height=6em]
+\tikzstyle{line} = [draw, -latex']
+    
+\begin{tikzpicture}[node distance = 2cm and 4cm]
+    % Place nodes
+    \node [block1] (femin) {FEM};
+    \node [block2, below=1cm of femin] (wrapin) {Funken $\longrightarrow$ FLENS View};
+    \node [block3, below=0.5cm of wrapin] (solve) {CG/GS};
+    \node [block1, below=1cm of solve] (femout) {FEM};
+    % Draw edges
+    \path [line] (femin) -- (wrapin);
+    \path [line] (wrapin) -- (solve);
+    \path [line] (solve) -- (femout);
+\end{tikzpicture}

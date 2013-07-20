@@ -76,11 +76,12 @@
 \usepackage{caption}
 \usepackage[subrefformat=parens,labelformat=parens]{subcaption}
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+
 \newcommand{\shellcmd}[1]{\\\indent\indent\texttt{\footnotesize\# #1}\\}
+
 \def\changemargin#1#2{\list{}{\rightmargin#2\leftmargin#1}\item[]}		%paragraph left margin
 \let\endchangemargin=\endlist 
 %\usepackage{algpseudocode}
-
 
 \relpenalty=9999
 \binoppenalty=9999
@@ -169,13 +170,6 @@
 %\newcommand{\norm}[1]{\ensuremath{\parallel #1 \parallel}}
 \newcommand{\sgn}{\mathrm{sgn}}
 
-\newcommand{\<}{$\langle$}
-\let\>=\undefined
-\newcommand{\>}{$\rangle$}
-\newcommand{\double}{{\color{blue}double}}
-\let\int=\undefined
-\newcommand{\int}{{\color{blue}int}}
-
 \pagestyle{headings}
 \begin{document}
 
@@ -232,4 +226,3 @@ Prof.\ Dr.\ Karsten Urban\\
 \include{HPC_section_mazen}
 
 \end{document}
-

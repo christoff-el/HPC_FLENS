@@ -194,12 +194,7 @@ void
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
 
-	//Create pointers that upcast FLENSDataVector to Parent DenseVector:
-	//DenseVector<Array<double> > *tmpOrig = &orig;
-	//DenseVector<Array<double> > *tmpDest = &dest;
-
 	//Copy data as usual (masquerading as a DenseVector :) ):
-	//blas::copy(*tmpOrig, *tmpDest);
 	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
 			   *static_cast<DenseVector<Array<double> > *>(&dest));
 
@@ -214,9 +209,6 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 {
 
 	//Upcast to DenseVector, and use the standard blas::dot:
-	//DenseVector<Array<double> > *tmpx1 = &x1;
-	//DenseVector<Array<double> > *tmpx2 = &x2;
-
 	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1),
 	                         *static_cast<DenseVector<Array<double> > *>(&x2));
 

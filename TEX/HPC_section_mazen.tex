@@ -1,0 +1,212 @@
+\section{Part II (Mazen Ali)}
+This section continues describing the performed changes to the FEM package in order to replace the provided LinearAlgebra library with FLENS. Note that the Makefiles have to be slightly adjusted as well, please refer to the provided package. Further adjustments, not described here, were performed for the main functions (main-serial and main-parallel).
+
+\subsection{GS Solver}\label{subsc:GS_solver}
+One of the main components of the FEM package is the solver that provides the end-result. Implemented in the FEM package were the CG (\emph{Conjugate Gradient}) and the GS (\emph{Gauss-Seidel}) solvers, parallel and serial versions. The adapting of the CG-Solver to FLENS was described in the previous section.
+
+Analogue to the CG solver, the GS solver was initially integrated into FEM via a wrapper. Schematically the wrapper does the following:
+\begin{center}
+\input{chart1}
+\center
+Function wrapper
+\end{center}
+
+The wrappers transform the data from the original format to FLENS and from FLENS back to the original format upon completion of the solving procedure. This functionality is provided in Flens\_supl by the headers funk2flens.h and flens2funk.h. For the solvers the transformation is required for a matrix and a vector type. Although for the Poisson problem and the chosen basis functions it suffices to consider transformations for sparse matrices, Flens\_supl includes both transformations for sparse and dense matrices, as well as a GS-solver for dense matrix classes (possible future utilization as pre-conditioner for e.g. multigrid in problems with resulting non-sparse systems).\\
+The implemented transformation in Flens\_supl copies the data manually from the original storing format into FLENS and back. However, FLENS also provides other alternatives for transforming data to FLENS using \emph{Matrix/Vector-Views}. The concept is illustrated below, where data from the original storing format is transformed to FLENS:
+
+\begin{lstlisting}
+int
+main()
+{
+	// Typedefs
+	typedef flens::DenseVector<flens::Array<double> >
+							Fl_Vec;
+	typedef flens::DenseVector<flens::Array<double>::View>
+							VecView;
+	typedef flens::Array<double>::View
+							View;
+	
+	// Initilaize with 0s
+	Vector 	v_funk(5); // Funken
+	VecView v_flens_view = View(5, v_funk.data()); // Flens View
+	Fl_Vec	v_flens = v_flens_view; // Flens
+
+	// Change values
+	v_funk(0) = 1;
+	v_flens_view(5) = 1;
+
+	// Print
+	cout << "funk=" << endl;
+	print(v_funk, 0, 4);
+	cout << endl;
+	cout << "flens_view=" << endl;
+	print(v_flens_view, 1, 5);
+	cout << endl;
+	cout << "flens=" << endl;
+	print(v_flens, 1, 5);
+	return 0;
+};
+\end{lstlisting}
+which would produce the output:
+\shellcmd{funk=\\
+1 0 0 0 1\\
+flens\_view=\\
+1 0 0 0 1\\
+flens=\\
+0 0 0 0 0 }
+FLENS views can be thus used in two ways: reference data from any other linear algebra package, as long as it provides access to the underlying C-Array, maintaining all the functionality of FLENS; or initialize FLENS non-view data structures via the internal FLENS copy constructor, thus avoiding copying the values manually.\\
+Note that this offers another form of ''wrapping'' for the solvers which does not involve data copying. The original data can be referenced via FLENS Matrix/Vector-Views using non-const view for the solutions vector and const views for the rest. The idea is schematically illustrated below:
+\begin{center}
+\input{chart2}
+\center
+Function wrapper w. Views
+\end{center}
+
+After completing the modification process for all data structures in the FEM package the wrappers for the solvers are turned off, since not required anymore.
+
+The implementation of the solvers themselves remained mostly unchanged. The required changes included:
+\begin{itemize}
+\item \underline{Index base:} by default the index base in FLENS is 1 (FORTRAN style), as opposed to the original data structures where the index base is 0 (C style). FLENS provides the possibility to set the index base (and range), as well as operators to access first and last indexes of its data structures. Thus, it is possible to utilize these operators in order to provide maximum flexibility w.r.t. choice of index base. However, we decided not to follow this approach, since this would make the code longer and less readable and the mentioned flexibility does not provide any foreseeable advantages. Thus, the index base was assumed to be 1 in all FEM data structures, as by default in FLENS, and the code was modified accordingly. 
+
+\item \underline{CRS matrices access:} FLENS CRS matrices can be accessed much in the same way as the original CRS matrices:
+\begin{lstlisting}
+const auto &_rows = A.engine().rows();
+const auto &_cols = A.engine().cols();
+const auto &_vals = A.engine().values();
+\end{lstlisting}
+The keyword \emph{auto} is recognized by the C++11 standard, i.e. this necessitates the use of a C++11 conform compiler, such as g++ version 4.7 or higher\footnote{Note that this is required for the entire FLENS library.}. Compile via:
+\shellcmd{g++ hello.cpp -std=c++11 <options>}
+The keyword \emph{auto} allows the compiler to deduce the type of the declared variable, applying rules similar to template argument deduction during function calls. Hence, this saves the programmer a lot of typing and makes the code more readable for the user.\\
+\emph{engine()} is the storage mechanism for FLENS and for CRS matrices it contains the getter methods rows(), cols() and values(), that return the corresponding vectors of type \emph{DenseVector}. In order to preserve the functionality of FLENS data structures, it is recommended to use references instead of pointers to the data (which would also be possible). Usage of the attained vectors is analogue to the standard usage of CRS data structures, e.g. as implemented in the original FEM package.
+
+Note, however, that FLENS sparse matrices do not allow to access elements directly (which can otherwise result in unintentional densifying), i.e.:
+\begin{lstlisting}
+A(2,2)		+= 3; // works fine for CoordStorage
+double _tmp	= A(2,2); // compile error
+\end{lstlisting}
+The second access would produce a compile error for all sparse FLENS classes. Thus, for retrieving values of the matrix a search loop is required.
+\item \underline{Underscore operator \textbf{\_} :} FLENS provides the utility of an underscore operator that can be used to set or copy portions of matrices and vectors, similar as in e.g. MATLAB:
+\begin{lstlisting}
+const Underscore<IndexType> _
+// Set MyVector to 3rd column of MyMatrix (must be same length)
+MyVector = MyMatrix(_,3);
+// Set Myvector's elements 1 to 3 to first elements of first row
+MyVector(_(1,3)) = MyMatrix(1,_(1,3));
+\end{lstlisting}
+The underscore operator substituted the original set() and memcpy() calls of the LinearAlgebra data structures.
+
+\item \underline{Type I,II vectors:} the original \emph{DataVector}s were replaced by templated \emph{FLENSDataVector}s that were described in Part I. As already mentioned, this preserves type safety. Usage is in many ways identical to the original DataVectors, main difference being that type conversions are performed during copy operations or during explicit method calls, such as typeII\_2\_I or vise versa.
+
+\item \underline{Templates:} Both solvers were templated, as well as most of Flens\_supl headers. The only exceptions are some of the headers that were used as temporary ''adapters'' to introduce FLENS into the original FEM package. Apart from some minor flexibility, this would allow to utilize Flens\_supl via headers only. Note that the FLENS library is headers only as well.
+\end{itemize}
+The dense GS solver required the same modifications, CRS matrix access excluded. The GS solver was tested and debugged.
+
+\subsection{Data Structures}
+In this section the adjustments for the Mesh and Coupling data structures are briefly described.
+\subsubsection{Mesh}
+Apart from the self explanatory data type changes, the required adjustments included:
+\begin{itemize}
+\item \underline{Index Base:} as described in previous section.
+\item \underline{Read and write methods:} Flens\_supl includes the templated read and write methods, implemented similar to the original read and write methods of the FEM package.
+\item \underline{Const-Correctness:} note that another advantage of the FLENS library is that it ensures const-correctness. Therefore the constructor calls had to be modified accordingly. E.g. in the original Mesh constructor the input vector \emph{\_dirichlet} is declared as \emph{const} although write access is required, which would cause a compile error in FLENS.
+\item \underline{Underscore operator \textbf{\_}:} as described in the previous section.
+\item \underline{CRS\_sort:} for the method provideGeometricData() the original FEM package utilized the constructor for the CRSMatrix class to sort the values of a vector. The constructor accepted 3 vectors of same size, the first contained the row index, the second the column index and the third the corresponding value in the matrix. This functionality is provided by the templated header function CRS\_sort.h, implemented analogue to the constructor call of the original FEM package. Alternatively, this can be done entirely without intermediary headers, utilizing the FLENS CoordStorage format and converting to GeCRSMatrix:
+
+\begin{lstlisting}
+// Initialize (_numRows, _numCols assumed to be already computed in a preceding for-loop)
+flens::GeCRSMatrix<flens::CRS<ElementType> >
+				vals_crs;
+flens::GeCoordMatrix<flens::CoordStorage<ElementType> >
+				vals_coord(_numRows, _numCols);
+// Fill
+for (IndexType i=1; i<=rowi.length(); ++i)
+{
+	if (vals(i)!=0)
+	{
+		vals_coord(rowi(i), coli(i)) += vals(i);	
+	}
+}
+// Convert
+vals_crs = vals_coord;
+// Access
+const auto &_vals = vals_crs.engine().values();
+\end{lstlisting}
+The latter way requires less writing but internally does more than actually necessary. However, even for large vectors this does not have a substantial influence on run-time, so that the end-choice is a matter of taste.
+\end{itemize}
+After adjusting the Mesh class, the dependencies in Fem.cpp have to be adjusted accordingly. The modified data structures were tested and debugged.
+
+\subsubsection{Coupling}
+Other than the self explanatory data type changes, no further modifications for the Coupling class were required. The dependencies have to be adjusted accordingly in Mesh, Fem, FLENSDataVector and the GS solver. The modifications were tested and debugged.
+
+\subsection{Debugging notes}
+The modifications described above required extensive debugging for both parts, as well as the merging process. Since this amounted to the biggest portion of the entire work time, this section will illustrate on a simple example of a common segmentation fault how to debug using core dumps. This will hopefully save future users a lot of time when modifying the FEM package.
+
+The FLENS library utilizes \emph{assert()} to ensure the index is not out of bounds. However, since these assertions are ''hidden'' deep in the templates and there is no exception handling implemented, the resulting error message will not provide any useful information about the origin of the faulty access. The system will attempt to produce a core dump, which is however turned off by default on most modern OSs. For example, the following code will produce a segmentation fault:
+
+\begin{lstlisting}
+int
+main()
+{
+	flens::DenseVector <flens::Array<double> > V(5);
+	V(6) = 3;
+	return 0;
+};
+\end{lstlisting}
+Compile and run:
+\shellcmd{g++ seg\_fault.cpp -o seg\_fault -g\\
+\# ./seg\_fault\\
+seg\_fault: /usr/local/FLENS/flens/storage/array/array.tcc:108:\\
+flens::Array<T, I, A>::ElementType\& flens::Array<T, I, A>::operator()\\
+(flens::Array<T, I, A>::IndexType) [with T = double; I = flens::IndexOptions<>;\\
+A = std::allocator<double>; flens::Array<T, I, A>::ElementType = double;\\
+flens::Array<T, I, A>::IndexType = int]: Assertion `index<=lastIndex()' failed.\\
+Aborted (core dumped)}
+
+As can be seen at the end of the error message, it claims that a core was dumped, which does not have to be true. To indeed enable core dumping type in the command line:
+\shellcmd{ulimit -c unlimited}
+Instead of \emph{unlimited} you can specify any other data size (in number of 512-byte blocks). After running the executable again, the crash now generates a core dump, by default in the same directory. Note that for debugging it is advisable to compile with the -g option, since the resulting machine code then contains more information. To analyze the produced core one can e.g. use the standard gdb debugger and proceed by typing:
+\shellcmd{gdb -c core seg\_fault}
+where the executable has to be specified as well, otherwise the machine code messages will not be ''linked'' with the source code. The last statements will usually be some calls to the kernel, e.g. a request to terminate the program. Working up the core file, one then can get to the observed error message:
+\shellcmd{Program terminated with signal 6, Aborted.\\
+\#0  0x00007f3fa01f1425 in raise () from /lib/x86\_64-linux-gnu/libc.so.6\\
+(gdb) up\\
+\#1  0x00007f3fa01f4b8b in abort () from /lib/x86\_64-linux-gnu/libc.so.6\\
+(gdb) \\
+\#2  0x00007f3fa01ea0ee in ?? () from /lib/x86\_64-linux-gnu/libc.so.6\\
+(gdb) \\
+\#3  0x00007f3fa01ea192 in \_\_assert\_fail () from /lib/x86\_64-linux-gnu/libc.so.6\\
+(gdb) \\
+\#4  0x0000000000400835 in operator() (index=6, this=0x7fff85fc2108)\\
+    at /usr/local/FLENS/flens/storage/array/array.tcc:108\\
+108	    ASSERT(index<=lastIndex());}
+
+Working up further will lead to preceding calls and then finally to the origin of the faulty access:
+\shellcmd{4  0x0000000000400835 in operator() (index=6, this=0x7fff85fc2108)\\
+    at /usr/local/FLENS/flens/storage/array/array.tcc:108\\
+108	    ASSERT(index<=lastIndex());\\
+(gdb) \\
+\#5  operator() (index=6, this=0x7fff85fc2100)\\
+    at /usr/local/FLENS/flens/vectortypes/impl/densevector.tcc:201\\
+201	    return \_array(index);\\
+(gdb) \\
+\#6  main () at seg\_fault.cpp:22\\
+22		V(6) = 3;}
+Obviously the benefits of analyzing core dumps extend to any sort of program crashes and it is generally a good way to make debugging much more efficient.\\
+Unfortunately, the approach does not apply in general to MPI. Though a core dump can still be generated, the content of the core is usually useless for debugging purposes. This, together with the fact that standard debuggers are not suited for parallel programs, often forces the programmer to debug ''by hand'', i.e. via cout and Barrier().
+
+
+\section{Flens\_supl (Mazen+Chris)}
+This section summarizes the headers in Flens\_supl.
+\begin{itemize}
+\item CRS\_sort.h: sorting function required in Mesh; accepts a vector of values with the corresponding row and column coordinates, returns a sorted vector values; sorted according to the order in a CRS matrix; templated;
+\item FLENSDataVector.h: Type I and II (2 separate data types) data vectors derived from FLENS DenseVector; required for parallel computations; methods implemented as in the original FEM package; templated;
+\item FLENS\_read\_write.h: read method for FLENS and write methods for FLENS dense vectors and matrices; implemented as in the original FEM package; templated;
+\item cg\_mpi\_blas.h: CG sparse solver for MPI; implemented as in the original FEM package; templated;
+\item cg\_nompi\_blas.h: CG sparse solver; standard implementation; templated;
+\item gs\_mpi\_blas.h: GS sparse and dense solvers for MPI; implemented as in the original FEM package; templated;
+\item gs\_nompi\_blas.h: GS sparse and dense solvers; standard implementation; templated;
+\item flens2c.h: converts FLENS DenseVector to C array; initially required for wrapping the original package with FLENS data structures; not required in the final version; non-templated;
+\item flens2funk.h: converts data from FLENS data structures to the original FEM package; initially required for wrapping; not required in the final version; templated;
+\item funk2flens.h: converts data from the original FEM package to FLENS; initially required for wrapping; not required in the final version; templated;
+\item wrappers.h: wraps the CG and GS solvers for use with the data structures from the original FEM package; not required in the final version; non-templated;
+\end{itemize}

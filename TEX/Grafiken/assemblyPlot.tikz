@@ -1,0 +1,106 @@
+% This file was created by matlab2tikz v0.4.0.
+% Copyright (c) 2008--2013, Nico Schlömer <nico.schloemer@gmail.com>
+% All rights reserved.
+% 
+% The latest updates can be retrieved from
+%   http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz
+% where you can also make suggestions and rate matlab2tikz.
+% 
+% 
+% 
+
+% defining custom colors
+\definecolor{mycolor1}{rgb}{1,0,1}%
+
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=\figurewidth,
+height=\figureheight,
+scale only axis,
+xmode=log,
+xmin=10000,
+xmax=10000000,
+xtick={10000,100000,1000000,10000000},
+xminorticks=true,
+minor x tick num={3},
+xlabel={Mesh Element Count},
+ymode=log,
+ymin=0.1,
+ymax=100,
+ytick={0.1,1,10,100},
+yminorticks=true,
+minor y tick num={3},
+ylabel={Computation time},
+title={Serial vs. Parallel for System Assembly},
+axis on top,
+legend style={at={(0.03,0.97)},anchor=north west,draw=black,fill=white,legend cell align=left}
+]
+\addplot [
+color=red,
+solid,
+line width=2.6pt,
+mark size=3.0pt,
+mark=x,
+mark options={solid}
+]
+table[row sep=crcr]{
+33025 0.817531\\
+131585 3.41866\\
+525313 14.7845\\
+2099201 65.8931\\
+};
+\addlegendentry{Serial};
+
+\addplot [
+color=green,
+solid,
+line width=1.3pt,
+mark size=3.0pt,
+mark=x,
+mark options={solid}
+]
+table[row sep=crcr]{
+33025 0.827823\\
+131585 3.54683\\
+525313 15.4809\\
+2099201 67.2637\\
+};
+\addlegendentry{Serial with GotoBLAS};
+
+\addplot [
+color=blue,
+solid,
+line width=2.6pt,
+mark size=3.0pt,
+mark=x,
+mark options={solid}
+]
+table[row sep=crcr]{
+33284 0.195\\
+132100 0.824\\
+526340 3.57\\
+2101252 15.27\\
+8396804 65\\
+};
+\addlegendentry{Parallel};
+
+\addplot [
+color=mycolor1,
+solid,
+line width=1.3pt,
+mark size=3.0pt,
+mark=x,
+mark options={solid}
+]
+table[row sep=crcr]{
+33284 0.204\\
+132100 0.845\\
+526340 3.68\\
+2101252 16.01\\
+8396804 68.1\\
+};
+\addlegendentry{Parallel with GotoBLAS};
+
+\end{axis}
+\end{tikzpicture}%
