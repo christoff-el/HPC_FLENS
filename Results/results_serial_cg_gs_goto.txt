@@ -1,0 +1,74 @@
+cg 5
+Times for initialisation/data loading:
+      Serial: 0.00142 seconds.
+
+Times for mesh generation and refinement:
+      Serial: 0.127933 seconds.
+
+Times for system assembly:
+      Serial: 0.827823 seconds.
+
+Iterations: 257  , MaxIterations:  33025
+
+Times for solution solving:
+      Serial: 1.02973 seconds.
+
+cg 6
+Times for initialisation/data loading:
+      Serial: 0.000734 seconds.
+
+Times for mesh generation and refinement:
+      Serial: 0.504452 seconds.
+
+Times for system assembly:
+      Serial: 3.54683 seconds.
+
+Iterations: 505  , MaxIterations:  131585
+
+Times for solution solving:
+      Serial: 9.27832 seconds.
+
+cg 7
+Times for initialisation/data loading:
+      Serial: 0.000712 seconds.
+
+Times for mesh generation and refinement:
+      Serial: 2.03087 seconds.
+
+Times for system assembly:
+      Serial: 15.4809 seconds.
+
+Iterations: 1002  , MaxIterations:  525313
+
+Times for solution solving:
+      Serial: 78.1647 seconds.
+
+cg 8
+Times for initialisation/data loading:
+      Serial: 0.00145 seconds.
+
+Times for mesh generation and refinement:
+      Serial: 8.01436 seconds.
+
+Times for system assembly:
+      Serial: 67.2637 seconds.
+
+Iterations: 1985  , MaxIterations:  2099201
+
+Times for solution solving:
+      Serial: 620.832 seconds.
+
+gs 5
+Times for initialisation/data loading:
+      Serial: 0.00141 seconds.
+
+Times for mesh generation and refinement:
+      Serial: 0.120882 seconds.
+
+Times for system assembly:
+      Serial: 0.825739 seconds.
+
+Iterations: 33025  , MaxIterations:  33025
+
+Times for solution solving:
+      Serial: 958.206 seconds.
