@@ -54,18 +54,6 @@ mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 cg 1
 echo "gs 5"
 mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 5 gs 1
 
-echo "gs 6"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 6 gs 1
-
-echo "gs 7"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 7 gs 1
-
-echo "gs 8"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 8 gs 1
-
-echo "gs 9"
-mpirun -np 4 --bynode main-parallel ./input/Square_four_domains 9 gs 1
-
 
 echo "habe $NSLOTS Prozessor"
 echo "Maschine:"

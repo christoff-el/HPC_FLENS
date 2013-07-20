@@ -4,7 +4,7 @@
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "../Fem/FemHeader.hpp"
-#include "Functions.hpp"
+#include "functions.hpp"
 
 using namespace std;
 
