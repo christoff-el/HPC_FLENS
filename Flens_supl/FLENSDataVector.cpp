@@ -183,6 +183,18 @@ FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
     
 }
 
+//Operators:
+template <typename VTYPE>
+template <typename VTYPER>
+FLENSDataVector<VTYPE>& 
+FLENSDataVector<VTYPE>::operator=(const VTYPER &rhs)
+{
+	if (this == &rhs){return *this;}
+	copy(rhs, *this);
+	return *this;
+}
+
+
 }	//namespace flens
 
 
@@ -191,11 +203,11 @@ namespace flens{ namespace blas{
 
 //Overloaded copy, so that when copying typeII->I, we also apply the appropriate type conversion:
 void
-copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
+copy(const FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
 {
 
 	//Copy data as usual (masquerading as a DenseVector :) ):
-	blas::copy(*static_cast<DenseVector<Array<double> > *>(&orig),
+	blas::copy(*static_cast<const DenseVector<Array<double> > *>(&orig),
 			   *static_cast<DenseVector<Array<double> > *>(&dest));
 
 	//Perform vector type conversion:
@@ -205,12 +217,12 @@ copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 
 //Overloaded dot - performs appropriate communication:
 double
-dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
+dot(const FLENSDataVector<FLvTypeI> &x1, const FLENSDataVector<FLvTypeII> &x2)
 {
 
 	//Upcast to DenseVector, and use the standard blas::dot:
-	double value = blas::dot(*static_cast<DenseVector<Array<double> > *>(&x1),
-	                         *static_cast<DenseVector<Array<double> > *>(&x2));
+	double value = blas::dot(*static_cast<const DenseVector<Array<double> > *>(&x1),
+	                         *static_cast<const DenseVector<Array<double> > *>(&x2));
 
 	//Receive buffer:
 	double buf = 0;
@@ -224,15 +236,19 @@ dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2)
 
 //Adds commutativity to dot:
 double
-dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2)
+dot(const FLENSDataVector<FLvTypeII> &x1, const FLENSDataVector<FLvTypeI> &x2)
 {
 	
 	return dot(x2,x1);
 	
 }
 
-
 }	//namespace blas
+
+
+
+
+
 }	//namespace flens
 
 

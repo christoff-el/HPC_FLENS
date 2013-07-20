@@ -38,8 +38,12 @@ struct FLENSDataVector
     
 	//Copy constructor (VTYPEs obligated to match):
 	FLENSDataVector(const FLENSDataVector<VTYPE> &rhs);
-	    
-
+	
+	
+	template <typename VTYPER>
+	FLENSDataVector<VTYPE>& 
+	operator=(const VTYPER &rhs);
+	
 	//Member objects:
 	const Coupling &coupling;
 
@@ -54,18 +58,20 @@ struct FLENSDataVector
 
 };
 
+
+
 }	//namespace flens
 
 namespace flens{ namespace blas{
 
 void 
-copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest);
+copy(const FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest);
 
 double
-dot(FLENSDataVector<FLvTypeI> &x1, FLENSDataVector<FLvTypeII> &x2);
+dot(const FLENSDataVector<FLvTypeI> &x1, const FLENSDataVector<FLvTypeII> &x2);
 
 double
-dot(FLENSDataVector<FLvTypeII> &x1, FLENSDataVector<FLvTypeI> &x2);
+dot(const FLENSDataVector<FLvTypeII> &x1, const FLENSDataVector<FLvTypeI> &x2);
 
 
 }	//namespace blas

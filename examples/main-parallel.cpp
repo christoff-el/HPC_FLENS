@@ -72,7 +72,6 @@ int main(int argc, char *argv[]){
     	}
     }
     
-    /* *** Initialise timer object */
     /* *** initialise geometry data containers */
     IMatrix elements, skeleton;
     IMatrix dirichlet, neumann;
