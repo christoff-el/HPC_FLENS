@@ -206,6 +206,29 @@ blas::axpy(-One, p, r2);
 
 As claimed in objective (3) in the Introduction, we also offer a version of the CG solver where such BLAS functions are overloaded, providing a MATLAB-style notation:
 \begin{lstlisting}
+p = A*x;
+r2 = r2 - p;
+\end{lstlisting}
+
+The CG solver containing this notation is contained in Flens_supl/overloaded. Its functionality does not differ.
+
+\subsubsection{Testing}
+
+Here we undertake some benchmarking on the Pacioli compute cluster. We examine the performance of the new FEM implementation, with respect to:
+\begin{enumerate}
+   \item Serial vs. parallel performance.
+   \item Performance boost from GotoBLAS
+\end{enumerate}
+
+\begin{figure}
+      \centering
+      \newlength\figureheight
+      \newlength\figurewidth
+      \setlength\figureheight{8cm}
+      \setlength\figurewidth{8cm}
+      \input{./Grafiken/assemblyPlot.tikz}
+      \caption{Compute times to perform system assembly.}
+      \label{fig:assembly}
 
 
 This class stores its vector values in 
