@@ -3,7 +3,7 @@
 \appendix
 \section{Appendix}
 
-In this appendix we offer instructions on how to set up and run our software package on both a desktop computer and on the pacioli compute cluster. We assume the target device is of the UNIX family, and already has the following:
+In this appendix we offer instructions on how to set up and run our software package on both a desktop computer and on the Pacioli compute cluster. We assume the target device is of the UNIX family, and already has the following:
 
 \begin{itemize}
    \item gcc of at least version 4.7
@@ -48,7 +48,7 @@ In this appendix we offer instructions on how to set up and run our software pac
 \subsection{Pacioli}
 
 \begin{enumerate}
-   \item Log in to pacioli and make a new directory where you would like the magic to happen.
+   \item Log in to Pacioli and make a new directory where you would like the magic to happen.
    \shellcmd{mkdir FEMtastic}
    \item Use scp to add our package (the directory called HPC\_FLENS) to this new directory.
    \item Get and build FLENS: 
@@ -85,6 +85,43 @@ In this appendix we offer instructions on how to set up and run our software pac
  
  \subsection{GotoBLAS}
  
+ Notes:
+ \begin{itemize}
+    \item GotoBLAS offers highly machine-specific optimisations. We performed testing on the single processor (AMD Opteron 252) nodes of Pacioli (nodes 1-16). The frontend is identical to these nodes, and therefore can be used to build GotoBLAS. Creativity would be required to build the library for the other nodes.
+    \item We found some issues with certain nodes (prime suspect: Node 16), whereby computation times were increased significantly (~10x) when using GotoBLAS. We suspect that this is due to a node that isn't actually identical to the others, and as such the `optimised' code is in fact the opposite.
+ \end{itemize}
+ To link FLENS with GotoBLAS (on Parcioli), perform steps 1-4 of A.2. Then:
  
+ \begin{enumerate}
+    \item Get GotoBLAS in the form of OpenBLAS:
+    \shellcmd{git clone git://github.com/xianyi/OpenBLAS}
+    \item Make OpenBLAS:
+    \shellcmd{cd ./OpenBLAS}
+    \shellcmd{make FC=gfortran}
+    \shellcmd{cd ..}
+    \item Install OpenBLAS:
+    \shellcmd{mkdir gotoins}
+    \shellcmd{cd ./OpenBLAS}
+    \shellcmd{make PREFIX=../gotoins FC=gfortran install}
+    \shellcmd{cd ..}
+    \item Add OpenBLAS to the linker directory path:
+    \shellcmd{export LD\_LIBRARY\_PATH=/home/\_\_your username\_\_/gotoins/lib:\$LD\_LIBRARY\_PATH}
+    
+    \item Build our package with GotoBLAS options:
+    \shellcmd{cd ./HPC\_FLENS}
+    \shellcmd{make goto}
+    \item Submit the appropriate jobscript with `goto' in its name, in the same way as in A.2.
+\end{enumerate}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
       
       
