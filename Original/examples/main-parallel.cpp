@@ -1,10 +1,12 @@
 #include <iostream>
 #include <iomanip>
 #include <mpi.h>
+#include <sys/utsname.h>
 
 #include "../LinearAlgebra/LinAlgHeader.hpp"
 #include "../Fem/FemHeader.hpp"
 #include "functions.hpp"
+#include "timer.h"
 
 using namespace std;
 
