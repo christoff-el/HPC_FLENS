@@ -13,3 +13,5 @@ b.*
 examples/output/A_serial.txt
 examples/main-serial
 examples/main-parallel
+Original/examples/main-parallel
+Original/examples/main-serial

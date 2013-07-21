@@ -161,7 +161,6 @@ FEM<METH>::assemble()
     //Build FLENS CRS matrix from I, J, vals (rows, cols, values):
     flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(_uD.length(),_uD.length());
 
-    // flens::CoordRowColCmp, flens::IndexBaseOne<int> 
     for (int i=1; i<=I.length(); ++i) {
 
         if (val(i)!=0) {
