@@ -38,6 +38,7 @@ class FEM{
 public:
 
 	typedef flens::GeCRSMatrix<flens::CRS<double, flens::IndexOptions<int, 1> > >	CRSMat;
+	typedef flens::DenseVector<flens::Array<double> >								DenseVector;
 
 	/*** Constructors and destructor *****************************************************/
 	FEM(Mesh &mesh_tmp, 
@@ -78,10 +79,11 @@ private:
 	Mesh _mesh; 
 		
 	//Storage structures for FEM system:
-	CRSMat 	_A;
-
-	typename SelectDataVector<METH>::TypeI    _uD, _u;		//Vector types based on FEM METHOD
-	typename SelectDataVector<METH>::TypeII   _b;			// type (MPI or NonMPI).
+	CRSMat 		_A;
+	DenseVector _uD;
+	
+	typename SelectDataVector<METH>::TypeI    _u;			//Vector types based on FEM METHOD
+	typename SelectDataVector<METH>::TypeII   _b;			//    type (MPI or NonMPI).
 		
 	//Function pointers for Dirichlet-/Neumann-data and right-hand side:
 	double (*_f)(double, double);

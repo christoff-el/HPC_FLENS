@@ -37,7 +37,7 @@ FEM<flens::MethMPI>::FEM(Mesh &mesh, double (*f)(double,double),
         			double (*DirichletData)(double,double), double (*g)(double,double))
         :	_mesh(mesh),
         	_A(),
-	    	_uD(mesh.numNodes, mesh.coupling),
+	    	_uD(mesh.numNodes),
          	_u(mesh.numNodes, mesh.coupling),
          	_b(mesh.numNodes, mesh.coupling),
          	_f(f),
@@ -65,9 +65,9 @@ FEM<METH>::assemble()
   	//Write values of dirichlet data:
     _updateDirichlet();
     
-    flens::DenseVector<flens::Array<int> > 	I(9*_mesh.numElements);
-    flens::DenseVector<flens::Array<int> > 	J(9*_mesh.numElements);
-    flens::DenseVector<flens::Array<double> > val(9*_mesh.numElements);
+    flens::DenseVector<flens::Array<int> > 		I(9*_mesh.numElements);
+    flens::DenseVector<flens::Array<int> > 		J(9*_mesh.numElements);
+    flens::DenseVector<flens::Array<double> > 	val(9*_mesh.numElements);
     double c1[2], d21[2], d31[2];
     double area4, fval, a, b, c;
     
@@ -159,26 +159,26 @@ FEM<METH>::assemble()
     /*** Set stiffness matrix ***/
     
     //Build FLENS CRS matrix from I, J, vals (rows, cols, values):
-    flens::GeCoordMatrix<flens::CoordStorage<double> > fl_A_coord(_uD.length(),_uD.length());
+    flens::GeCoordMatrix<flens::CoordStorage<double> > A_coord(_u.length(),_u.length());
 
     for (int i=1; i<=I.length(); ++i) {
 
         if (val(i)!=0) {
-            fl_A_coord(I(i),J(i)) += val(i);
+            A_coord(I(i),J(i)) += val(i);
         }
     	
     }
 
-    _A = fl_A_coord;
+    _A = A_coord;
 
 
     /*** Set right-hand side vector b ***/    
-    flens::FLENSDataVector<flens::FLvTypeII> fl_Au(_uD.length(), _mesh.coupling);
-        
+    flens::DenseVector<flens::Array<double> > Au(_uD.length());
+    
 
     /*** Incorporate Dirichlet-Data ***/
-    flens::blas::mv(flens::NoTrans, 1., _A, _uD, 0., fl_Au);
-    flens::blas::axpy(-1., fl_Au, _b);    
+    flens::blas::mv(flens::NoTrans, 1., _A, *static_cast<const flens::DenseVector<flens::Array<double> > *> (&_uD), 0., Au);
+    flens::blas::axpy(-1., Au, _b);    
 
 }
 
