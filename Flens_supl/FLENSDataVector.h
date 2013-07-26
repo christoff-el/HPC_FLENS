@@ -10,10 +10,15 @@
 
 namespace flens{
 
+//////////////////
+//Type naming:
+
+//Vector types:
 class FLvNonMPI;
 class FLvTypeI;
 class FLvTypeII;
 
+//Method types:
 struct MethMPI {
 	typedef FLvTypeI  I;
 	typedef FLvTypeII II;
@@ -23,6 +28,8 @@ struct MethNonMPI {
 	typedef FLvNonMPI I;
 	typedef FLvNonMPI II;
 };
+
+//////////////////
 
 template <typename VTYPE = FLvNonMPI>
 struct FLENSDataVector

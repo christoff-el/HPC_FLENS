@@ -29,7 +29,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
 
 
     //Set x to 0 at dirichlet nodes (where the value is fixed):
-    for(int i=1; i<=bc.length(); ++i) {
+    for(IndexType i=1; i<=bc.length(); ++i) {
           x(bc(i)) = Zero;
     }
 
@@ -41,7 +41,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
     blas::axpy(-One, p, r2);
     
     //Set r2 to 0 at the dirichlet nodes:
-    for(int i=1; i<=bc.length(); ++i) {
+    for(IndexType i=1; i<=bc.length(); ++i) {
     	r2(bc(i)) = Zero;
     }
     

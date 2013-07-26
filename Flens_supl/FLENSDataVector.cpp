@@ -225,7 +225,7 @@ copy(const FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest)
 	//Copy data as usual (masquerading as a DenseVector :) ):
 	blas::copy(*static_cast<const DenseVector<Array<double> > *>(&orig),
 			   *static_cast<DenseVector<Array<double> > *>(&dest));
-
+			   
 	//Perform vector type conversion:
 	dest.typeII_2_I();
 	//(coupling can't be transferred)
