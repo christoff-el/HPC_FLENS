@@ -186,12 +186,28 @@ FLENSDataVector<VTYPE>::writeData(int proc, std::string filename)
 //Operators:
 template <typename VTYPE>
 template <typename VTYPER>
-FLENSDataVector<VTYPE>& 
+FLENSDataVector<VTYPE>&
 FLENSDataVector<VTYPE>::operator=(const VTYPER &rhs)
 {
-	if (this == &rhs){return *this;}
-	copy(rhs, *this);
-	return *this;
+    blas::copy(rhs, *this);
+    return *this;
+}
+
+template <typename VTYPE>
+FLENSDataVector<VTYPE>&
+FLENSDataVector<VTYPE>::operator=(FLENSDataVector<VTYPE> &rhs)
+{
+    blas::copy(rhs, *this);
+    return *this;
+}
+
+
+template <typename VTYPE>
+template <typename VTYPER>
+double
+FLENSDataVector<VTYPE>::operator*(FLENSDataVector<VTYPER> &rhs)
+{
+	return blas::dot(rhs, *this);
 }
 
 

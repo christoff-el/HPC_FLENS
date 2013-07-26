@@ -88,7 +88,7 @@ In this appendix we offer instructions on how to set up and run our software pac
  Notes:
  \begin{itemize}
     \item GotoBLAS offers highly machine-specific optimisations. We performed testing on the single processor (AMD Opteron 252) nodes of Pacioli (nodes 1-16). The frontend is identical to these nodes, and therefore can be used to build GotoBLAS. Creativity would be required to build the library for the other nodes.
-    \item We found some issues with certain nodes (prime suspect: Node 16), whereby computation times were increased significantly (~10x) when using GotoBLAS. We suspect that this is due to a node that isn't actually identical to the others, and as such the `optimised' code is in fact the opposite.
+    \item We found some issues with certain nodes (prime suspect: Node 16), whereby computation times were increased significantly ($\sim$10x) when using GotoBLAS. We suspect that this is due to a node that isn't actually identical to the others, and as such the `optimised' code is in fact the opposite. Therefore care should be taken to use the GotoBLAS library on processors for which it was configured/built.
  \end{itemize}
  To link FLENS with GotoBLAS (on Parcioli), perform steps 1-4 of A.2. Then:
  

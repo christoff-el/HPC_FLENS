@@ -6,6 +6,7 @@
 
 #include "../Fem/Coupling.hpp"
 
+#include <iostream>
 
 namespace flens{
 
@@ -28,7 +29,7 @@ struct FLENSDataVector
 		: public DenseVector<Array<double> >
 {
 	typedef double	ElementType;
-    typedef int   	IndexType;
+	typedef int   	IndexType;
 
 	//Non-MPI constructor:
 	FLENSDataVector(int n);
@@ -43,6 +44,13 @@ struct FLENSDataVector
 	template <typename VTYPER>
 	FLENSDataVector<VTYPE>& 
 	operator=(const VTYPER &rhs);
+	
+	FLENSDataVector<VTYPE>&
+    operator=(FLENSDataVector<VTYPE> &rhs);
+    
+    template <typename VTYPER>
+    double
+    operator*(FLENSDataVector<VTYPER> &rhs);
 	
 	//Member objects:
 	const Coupling &coupling;

@@ -89,7 +89,7 @@ cg_mpi_blas(const MA &A, const VB &b, VX &x, VBC &bc,
         
         //Update local (= typeII) residual by r2 -= alpha*Ap:
         //blas::axpy(-alpha, Ap, r2);
-        r2 -= alpha*p;
+        r2 -= alpha*Ap;
 
         /*** MPI: Get global (=type I) residual ***/
         //Copy r2 to r1 - invokes II->I conversion:
