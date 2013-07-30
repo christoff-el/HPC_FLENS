@@ -1,25 +1,25 @@
 \setcounter{section}{-1}
 \section{Introduction}
 
-The basis of this lecture course has been the parallelisation of various numerical methods, with a particular focus on the Finite Element Method. For this project we have been supplied with a (subsection of a) software package (which we shall henceforth call \emph{the FEM package}) that computes the solution to the Poisson partial differential equation using the Finite Element Method. This package is self-contained - it includes its own custom matrix/vector types, and its own implementations of linear algebra operations on these types. Our goal is to make improvements to the package with the help of FLENS.
+The primary objective of the High Performance Computing lecture course is the parallelisation of various numerical methods, with a particular focus on the Finite Element Method. For this project we have been supplied with a (subsection of a) software package (which we shall henceforth refer to as \emph{the FEM package}) that computes the solution to the Poisson partial differential equation using the Finite Element Method. This package is self-contained - it includes its own custom matrix/vector classes, and its own implementations of linear algebra operations on these types. Our goal is to make improvements to the package with the help of FLENS.
 
-FLENS (\emph{Flexible Library for Efficient Numerical Solutions}) is a C++ library written by Dr. Michael Lehn, which offers a comprehensive collection of matrix and vector types. Included is a C++ -based BLAS (\emph{Basic Linear Algebra Subfunctions} implementation, which provides linear algebra operations, such as matrix-vector multiplication, on these types. 
+FLENS (\emph{Flexible Library for Efficient Numerical Solutions}) is a C++ library, written by Dr. Michael Lehn, which offers a comprehensive collection of matrix and vector classes. Included is a C++ -based BLAS (\emph{Basic Linear Algebra Subfunctions}) implementation, which provides linear algebra operations, such as matrix-vector multiplication, on these types. 
 
-The advantages of using FLENS in the FEM package are numerous. Firstly, use of an external library for matrix/vector types adds some standardisation to the package, aiding, for example, a user who is new to the FEM package, but has experience of FLENS from other projects. Secondly the library can be linked, with almost trivial effort, to any optimised BLAS or LAPACK libraries that are available, such as \emph{ATLAS} or \emph{Goto BLAS}, for instant performance increases of BLAS operations. Thirdly, FLENS offers overloaded operators for BLAS operations. We recognise that users from different backgrounds may have a preference regarding the notation used for linear algebra operations, be it the tradition BLAS notation:
+The advantages of using FLENS in the FEM package are numerous. Firstly, use of an external library for matrix/vector types adds standardisation to the package. A user who is unfamiliar with the FEM package, but has experience of FLENS from other projects, for example, would benefit from such standardisation. Secondly, the library can be linked, with almost trivial effort, to any optimised BLAS or LAPACK libraries that are available, such as \emph{ATLAS} or \emph{Goto BLAS}, for instant performance increases of BLAS operations. Thirdly, FLENS offers overloaded operators for linear algebra operations. We recognise that users from different backgrounds may have a preference regarding the notation used for such operations, be it the tradition BLAS notation:
 \begin{lstlisting}
    blas::mv(NoTrans, One, A, p, Zero, Ap);
 \end{lstlisting}
-or a notation more akin to that of MATLAB:
+or notation more akin to that of MATLAB:
 \begin{lstlisting}
    Ap = A*p;
 \end{lstlisting}
-(for matrix A, vector p). With FLENS, we have the choice.
-
+(for the matrix-vector product of some matrix A, vector p). With FLENS, we have the choice.
+\\\\\\
 We therefore summarise the aims of this project as follows:
 \begin{enumerate}
-   \item Replace all data storage objects with FLENS-based objects.
-   \item Where possible, replace linear algebra operations with their BLAS equivalents, for speed-up from optimised BLAS libraries.
-   \item Offer two versions of solvers, one with BLAS notation, one with overloaded operators.
+   \item Replace all data storage objects in the FEM package with FLENS-based objects.
+   \item Where possible replace linear algebra operations with BLAS equivalents via the FLENS framework, to allow for speed-up from optimised BLAS libraries.
+   \item Offer two versions of solvers, one using BLAS notation, one using overloaded operators.
 \end{enumerate}
 
 
@@ -27,11 +27,11 @@ We therefore summarise the aims of this project as follows:
 
 \subsection{Matrix and Vector Types}
 
-A major part of converting the FEM package to the FLENS framework is the transition from the package's custom storage types to FLENS-based types. Of course, some types, such as the package's \texttt{Vector} class, have exact FLENS equivalents. Others, however, contain bespoke objects and methods for the MPI communications. Thus we must create our own custom storage types in these cases.
+A major task when converting the FEM package to the FLENS framework is the transition from the package's custom storage types to FLENS-based types. Of course, some types, such as the package's \texttt{Vector} class, have exact FLENS equivalents. Others, however, contain bespoke objects and methods for MPI communications. Clearly we must create our own custom storage types in the latter cases.
 
 \subsubsection{Equivalent Types and Index Base}
 
-We adopt the following direct conversions from the FEM package to FLENS framework:
+We adopt the following direct type conversions from the FEM package to FLENS framework:
 \begin{equation*}
 \begin{array}{rcl}
    \mbox{\texttt{Vector}}  &  \rightarrow  &  \mbox{\texttt{DenseVector\<Array\<\double\> \>}} \\
@@ -39,7 +39,7 @@ We adopt the following direct conversions from the FEM package to FLENS framewor
 \end{array}
 \end{equation*}
 
-However, we must note that the default index base in FLENS, which we are using here, is 1, as opposed to that of the package, which is 0. We make this change, despite the awkwardness it adds to the transition, because this is the natural index base regarding the mesh geometry. Numbering of the mesh nodes starts at 1, and assembly of the system of linear equations frequently accesses vector elements corresponding to node identities. For example in the FEM package:
+However we must note that the default index base in FLENS is 1, as opposed to that of the package, which has index base 0. We accept this default value, despite the awkwardness it adds to the transition, because 1 is the natural choice of index base with respect to the mesh geometry. The numbering of the mesh nodes starts at 1, and assembly of the system of linear equations frequently accesses vector elements corresponding to node identities. For example in the FEM package:
 
 \begin{lstlisting}
    someVec_FEMpackage(nodeID - 1) = someValue;
@@ -51,13 +51,13 @@ as opposed to using FLENS:
    someVec_FLENS(nodeID) = someValue;
 \end{lstlisting}
 
-Whilst this is purely cosmetic, it may help to avoid bugs caused by forgetting to subtract 1 from node identities. For consistency, we implemented all FLENS matrices/vectors with index base 1.
+Whilst this is a purely cosmetic change, it may help to avoid future problems caused by forgetting to subtract 1 from node identities. For consistency, we implemented all FLENS matrices/vectors with this default index base of 1.
 
-FLENS includes a storage scheme for sparse matrices of CRS (Column-Row-Storage) type, offering an alternative to the FEM package's \texttt{CRSMatrix} type. However, these must be initialised from a FLENS sparse matrix with a coordinate storage scheme, effecting a change in the implementation of the type, but not requiring the creation of a custom type.
+FLENS includes a CRS (\emph{Column-Row-Storage}) storage scheme for sparse matrices, offering a direct conversion from the FEM package's \texttt{CRSMatrix} class. However, these FLENS CRS matrices must be initialised via conversion from a FLENS sparse matrix with a coordinate storage scheme. Thus the conversion effects a change in the initialisation of the matrix object, but not requiring the creation of a custom matrix class.
 
 \subsubsection{TypeI and TypeII}\label{subsc:typeI_II}
 
-The FEM package uses the nomenclature defined in the lecture course, of \emph{TypeI} and \emph{TypeII} to distinguish between vectors that contain values corresponding to the problem posed on a compute node's local mesh, or on the global mesh:
+The FEM package adopts the nomenclature defined in the lecture course, of \emph{TypeI} and \emph{TypeII} to distinguish between vectors that contain values corresponding to the problem posed on a compute node's local mesh, or on the global mesh:
 
 \begin {itemize}
    \item \textbf{TypeI}: global values.
@@ -66,18 +66,18 @@ The FEM package uses the nomenclature defined in the lecture course, of \emph{Ty
 
 We adopt this definition in this paper and in our code, and refer to these types as \emph{MPI vector types}.
 
-\subsubsection{FLENSDataVector} (Christopher Davis)
+\subsubsection{FLENSDataVector}
 
-The FEM package's \texttt{DataVector} class is the package's primary custom vector type. Included members are:
+The FEM package's \texttt{DataVector} class is the package's primary custom vector type. Members are comprised of:
 \begin{itemize}
-   \item \texttt{Vector} object: stores the values of the \texttt{DataVector}.
-   \item \texttt{Coupling} object: contains mesh geometry information required for MPI communications.
+   \item A \texttt{Vector} object: stores the values/elements of the \texttt{DataVector}.
+   \item A \texttt{Coupling} object: contains mesh geometry information required for MPI communications.
    \item A \texttt{vectorType} enumerated type: determines the MPI vector type of the vector (see Section \ref{subsc:typeI_II}).
 \end{itemize}
 
-We propose a FLENS-based replacement for this class called \texttt{FLENSDataVector}, which incorporates a few small yet profound modifications to the structure.
+We propose a FLENS-based replacement for this class called \texttt{FLENSDataVector}, which incorporates a few small, yet profound, modifications to the general structure.
 
-Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\<\double\> \>} to store our vector values. However, we choose to \emph{derive} our class from this FLENS type, rather than specifying a \texttt{DenseVector} as a member object. I.e. we use a `is-a' \texttt{DenseVector} approach, rather than a `has-a' approach. The advantage here is that our class inherits all methods and overloaded operator from the \texttt{DenseVector} class, and can be passed directly to the FLENS BLAS functions. This lends itself to a more parsimonious implementation - under the `has-a' approach we would need to overload every BLAS function, such as: 
+Firstly, we make the obvious choice of using a FLENS \texttt{DenseVector\<Array\<\double\> \>} to store our vector values/elements. We choose to \emph{derive} our class from this FLENS type, rather than specifying a \texttt{DenseVector} as a member object. I.e. we use an `is-a' \texttt{DenseVector} approach, rather than a `has-a' \texttt{DenseVector} approach. The advantage is that our class inherits all methods and overloaded operators from the \texttt{DenseVector} class, and can therefore be passed directly to the FLENS BLAS functions. This lends itself to a more parsimonious implementation - under the `has-a' approach we would need to overload every BLAS function, for example: 
 \begin{lstlisting}
    double
    dot(FLENSDataVector x, FLENSDataVector y) {
@@ -98,7 +98,11 @@ neither of which are desirable.
 
 The \texttt{Coupling} object is stored as a constant reference - the same way as in the FEM package.
 
-Next we consider the enumerated type that specifies the MPI vector type. Here we wish to change the structure somewhat - whilst setting the MPI vector type in this fashion is easy and flexible, allowing the type to be changed as and when required, we find this to be \emph{too} flexible, and not ideal from a software design perspective. To help explain the situation, we consider a blind man and his socks. The man in question loves to wear socks, and therefore does so at all times. He commands an extensive collection, consisting of many different colours. Each morning he changes his socks, taking care to pair the dirty socks together so that they remain paired after washing. His system appears to work well - he always wears matching socks, and as a result leads a successful life. But what about if one morning whilst in the middle of changing his socks he is distracted by the telephone ringing, and as such forgets to change one of his socks - now his socks don't match! Whilst we would like to think that some kind person may notify him of his mistake, the world can be a cruel place. Odd socks are rarely tolerated by modern societies, so we can imaging that his life's achievements would probably crumble around him. Returning to the world of the FEM package, we hope that the difficulties that could arise from the enumerated type are clear - there is no way of determining whether the values contained in a TypeI \texttt{DataVector} are actually global values. There is always the chance that some rogue function changed the type without modifying the values. Such a problem would not make for an enjoyable debugging task.
+Next we consider the enumerated type that specifies the MPI vector type in the FEM package's \texttt{DataVector}. Here we wish to change the structure somewhat - whilst setting the MPI vector type in this fashion is easy and flexible, allowing the type to be changed as and when required, we find this to be \emph{too} flexible, and not ideal from a software design perspective. To help explain the situation, we consider a blind man and his socks. \\
+\begin{quote}
+\emph{The man in question loves to wear socks, and therefore does so at all times. He commands an extensive collection, comprising a wide range of different colours. Each morning he changes his socks, taking care to pair the dirty socks together so that they remain paired after washing. His system appears to work well - he always wears matching socks, and as a result leads a successful life. But what if one morning, whilst in the midst of changing his socks, he is distracted by the telephone ringing, and as such neglects to change one of his socks - now his socks don't match! Whilst we would like to think that some kind person may notify him of his mistake, the world can be a cruel place. Odd socks are rarely tolerated by modern societies, and so his life's achievements would probably crumble around him.}\\
+\end{quote}
+Returning to the world of the FEM package, we hope that the difficulties that could arise from the enumerated type are clearer - there is no way of determining whether the values contained in a TypeI \texttt{DataVector} are actually global values. There is always the chance that some rogue function changed the type without modifying the values, or vice-versa. Such a problem would not make for an enjoyable debugging task.
 
 Thus our \texttt{FLENSDataVector} is implemented as a template class, requiring the MPI vector type to be defined (permanently) at instantiation. The following classes are permitted as specialisation types:
 \begin{itemize}
@@ -107,7 +111,7 @@ Thus our \texttt{FLENSDataVector} is implemented as a template class, requiring 
    \item[-] \texttt{class FLvTypeII}
 \end{itemize}
 
-Clever implementation of the \texttt{FLENSDataVector} constructors limits specialisation of the class to these types \emph{only}, as well as ensuring the specification of a Coupling object for MPI types (and not for the non-MPI). We use specialisations of the constructor function for these types, for example:
+Clever implementation of the \texttt{FLENSDataVector} constructors limits specialisation of the vector class \emph{only} to these types, as well as ensuring that a Coupling object is specified for MPI types (and not for the non-MPI). We achieve this by adding specialisations of the constructor template function for these types, for example:
 \begin{lstlisting}
 template <>
 FLENSDataVector<FLvNonMPI>::FLENSDataVector(int n)
@@ -137,25 +141,26 @@ FLENSDataVector<double>  oops(5);
 
 As such, we have limited the potential for undefined behaviour. 
 
-All communication-related member methods of the FEM package's \texttt{DataVector} are added to the \texttt{FLENSDataVector} with no significant changes. For conversion methods, we require the object to be of the destination type. For example:
+All communication-related methods of the FEM package's \texttt{DataVector} were added to the \texttt{FLENSDataVector} with no significant changes. For MPI type conversion methods, we force the object to be converted to be of the destination type. For example:
 \begin{lstlisting}
 FLENSDataVector<FLvTypeI> myVec(5, Coupling());
 
-////////////////////////////////////
-// *** fill with local values *** //
-////////////////////////////////////
+//////////////////////////////////////////////
+// *** fill with local (type II) values *** //
+//////////////////////////////////////////////
 
-myVec.typeII_2_I();		<-- perfect
-//myVec.typeI_2_II();		<-- would cause compiler error
+myVec.typeII_2_I();		//<-- perfect
+myVec.typeI_2_II();		//<-- would cause compiler error
 \end{lstlisting}
 
 \subsubsection{BLAS Overloading}
 
-Most BLAS functions can be used in the FEM package in their usual form. The copy and dot product functions, however, require attention.
+Most BLAS functions can be used in place of the FEM package's linear algebra routines without modification. The \texttt{copy} and \texttt{dot} functions, however, require attention.
 
-Copying between two \texttt{FLENSDataVectors} of the same MPI vector type can use the BLAS copy function without further assistance. The types match, and we can't do anything about the constant reference to the Coupling object (this must be left to the user to ensure). 
+Copying between two \texttt{FLENSDataVectors} of the same MPI vector type can use the BLAS copy function without further assistance. The types match, and we can't do anything about the constant reference to the Coupling object (this must be left to the user to ensure), so we just need to transfer the element values. 
 
-When copying vectors of differing MPI vector types, we overload the BLAS copy function. Within this overloaded function, we call the BLAS copy function to copy the vector values by \emph{upcasting} the \texttt{FLENSDataVector}s to their parent class \texttt{DenseVector\<Array\<\double\> \>}, then perform the appropriate conversion, for example:
+When copying vectors of differing MPI vector types, we overload the BLAS copy function. From within this overloaded function, we call the BLAS copy function to copy the vector element values by \emph{upcasting} the \texttt{FLENSDataVector}s to their parent class \texttt{DenseVector\<Array\<\double\> \>}, then perform the appropriate MPI type conversion, for example:
+\\\\\\
 \begin{lstlisting}
 void
 copy(FLENSDataVector<FLvTypeII> &orig, FLENSDataVector<FLvTypeI> &dest) 
@@ -174,7 +179,7 @@ We use a similar technique for the dot product - the dot product of the two supp
 
 By ensuring that our overloaded functions still use the FLENS BLAS implementation, we maintain the possibility for objective (2) in the Introduction.
 
-We point out that our use of `proper' object type to define the MPI vector types means that the many type asserts present in the FEM package's linear algebra subroutines, such as:
+We point out that our use of `proper' object types to define the MPI vector types means that the many type asserts present in the FEM package's linear algebra subroutines, such as:
 \begin{lstlisting}
 double dot(DataVector &u, DataVector &v)
 {
@@ -184,7 +189,7 @@ double dot(DataVector &u, DataVector &v)
 	// we only multiply typeI and typeII vectors
 	assert(u.type != v.type);		//<--assert
 \end{lstlisting}
-are not required. All type checking is moved to compile time, a significant advantage in terms of both runtime efficiency and ease of debugging.
+are no longer required. All type checking is moved to compile time, an advantage in terms of both runtime efficiency and ease of debugging.
 
 \subsection{The CG Solver}
 
@@ -192,12 +197,12 @@ are not required. All type checking is moved to compile time, a significant adva
 
 In this section we look at the implementation of the conjugate gradient method for solving a system of linear equations. The solver was initially integrated into the FEM package via a wrapper, the details of which are described below in Section \ref{subsc:GS_solver}.
 
-The CG solver uses many linear algebra operations, and is therefore a prime candidate for using BLAS functions. For example, we replace FEM package lines such as:
+The CG solver uses many linear algebra operations, and is therefore a prime candidate for using BLAS functions. For example, we replaced FEM package function calls such as:
 \begin{lstlisting}
 CRSmatVec(p,A,x);
 add(r2,p,-1.);
 \end{lstlisting}
-with the more universally recognised:
+with the more widely recognised BLAS equivalent:
 \begin{lstlisting}
 blas::mv(NoTrans, One, A, x, Zero, p);
 blas::axpy(-One, p, r2);
@@ -209,20 +214,20 @@ p = A*x;
 r2 = r2 - p;
 \end{lstlisting}
 
-The CG solver containing this notation is contained in Flens\_supl/overloaded. Its functionality does not differ.
+The CG solver containing this notation is contained in Flens\_supl/overloaded.
 
 \subsubsection{Testing}
 
 
-Here we undertake some benchmarking on the Pacioli compute cluster. We examine the performance of the new FEM implementation, with respect to:
+We undertook some benchmarking on the Pacioli compute cluster. We examined the performance of the new FEM implementation, with respect to:
 \begin{enumerate}
    \item Serial vs. parallel performance.
    \item Performance boost from GotoBLAS (provided by the OpenBLAS library).
 \end{enumerate}
 
-Testing was conducted using a mesh with four domains (hence requiring 4 computation processes). For full homogeneity, the program was executed such that each process was run on separate (identical) nodes, rather than making use of multiple processors/cores on single nodes. Thus all process communications were performed over the Infiniband network using the MPI. 
+Testing was conducted using a 2-d mesh with four domains (hence requiring 4 computation processes). For full homogeneity, the program was executed such that each process was run on separate (identical) nodes, rather than making use of multiple processors/cores on fewer nodes. Thus all communications were performed over the Infiniband network using the MPI. 
 
-Figure \ref{fig:assembly} shows the compute times required to assemble the FEM system. This part of computation requires no communication between processes, and incorporates no BLAS subroutines. The results follow our logical predictions, and can be summarised as follows:
+Figure \ref{fig:assembly} shows the compute times required to assemble the FEM system. This part of computation requires no communication between processes, and makes use of no BLAS subroutines. The results follow our logical predictions, and can be summarised as follows:
 \begin{itemize}
    \item The parallel implementation is, on average, 4.2x faster than the serial implementation for a given number of mesh elements.
    \item GotoBLAS is of no benefit here.
@@ -231,22 +236,22 @@ Figure \ref{fig:assembly} shows the compute times required to assemble the FEM s
 Figure \ref{fig:solver} shows the compute times required to solve the system of linear equations. This part of computation does require communication between processes, and does make extensive use of BLAS subroutines. The results again follow our predictions, and can be summarised as follows:
 \begin{itemize}
    \item The parallel implementation is, on average, only 1.8x faster than the serial implementation for a given number of mesh elements. Thus we see that the communication here acts as a bottleneck, with a detrimental effect on compute times. 
-   \item The near-trivial linking of the OpenBLAS library effects a 1.34x performance increase in the serial implementation, and a 1.43x performance increase in the parallel implementation, on average. This `free' improvement was only possible due to the use of FLENS.
+   \item The near-trivial linking of the OpenBLAS library effects a 1.34x performance increase in the serial implementation and a 1.43x performance increase in the parallel implementation, on average. This `free' improvement was only possible due to the use of FLENS.
 \end{itemize}
 \begin{figure}[H]
       \centering
       \newlength\figureheight
       \newlength\figurewidth
-      \setlength\figureheight{7cm}
-      \setlength\figurewidth{10cm}
+      \setlength\figureheight{6cm}
+      \setlength\figurewidth{12cm}
       \input{./Grafiken/assemblyPlot.tikz}
       \caption{Compute times to perform system assembly.}
       \label{fig:assembly}
 \end{figure}
 \begin{figure}[H]
       \centering
-      \setlength\figureheight{7cm}
-      \setlength\figurewidth{10cm}
+      \setlength\figureheight{6cm}
+      \setlength\figurewidth{12cm}
       \input{./Grafiken/solvePlot.tikz}
       \caption{Compute times to perform system assembly.}
       \label{fig:solver}
