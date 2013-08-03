@@ -25,7 +25,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include $(IFLENS) -std=c++11 -c
+CPPFLAGS += -Wall -O3 -I. -I.. -I/opt/local/include/openmpi -I/opt/local/include $(IFLENS) -std=c++11 -c
 
 
 all: Coupling.o Mesh.o Fem.o libFem.a
