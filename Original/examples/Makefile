@@ -16,7 +16,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS = -Wall -I. -I.. -I/opt/local/include/openmpi
+CPPFLAGS = -Wall -I. -I.. -I/opt/local/include/openmpi -O3
 #CPPFLAGS = -Wall -I. -I.. $(LIBS)
 
 .PHONY:   all clean
