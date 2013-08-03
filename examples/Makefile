@@ -23,7 +23,7 @@ ifeq ($(OS),Linux)
   CC  := mpicxx
 endif
 
-CPPFLAGS += -Wall -I. -I.. -I../Flens_supl -I../Fem -I/opt/local/include/openmpi $(IFLENS) -std=c++11
+CPPFLAGS += -Wall -I. -I.. -I../Flens_supl -I../Fem -I/opt/local/include/openmpi $(IFLENS) -std=c++11 -O3
 
 .PHONY:   all clean goto
 
