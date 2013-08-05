@@ -100,7 +100,7 @@ table[row sep=crcr]{
 2101252 329.28\\
 8396804 2589.78\\
 };
-\addlegendentry{Parallel G with GotoBLAS};
+\addlegendentry{Parallel CG with GotoBLAS};
 
 \end{axis}
 \end{tikzpicture}%

@@ -1,0 +1,24 @@
+\frametitle{BLAS}
+\begin{itemize}
+\item <-1> Care was taken when overloading BLAS operations that require MPI communications:
+\begin{lstlisting}
+//Overloaded dot - performs appropriate communication:
+double
+dot(const FLENSDataVector<FLvTypeI> &x1,
+    const FLENSDataVector<FLvTypeII> &x2)
+{
+  //Upcast to DenseVector, and use the standard blas::dot:
+  double value =
+      blas::dot(
+        *static_cast<const DenseVector<Array<double> > *>(&x1),
+        *static_cast<const DenseVector<Array<double> > *>(&x2)
+      );
+
+  double v = 0;
+  //*** Communication to add values from other processes ***/
+  MPI::COMM_WORLD.Allreduce(&value,&v,1,MPI::DOUBLE,MPI::SUM);
+
+  return v;
+}
+\end{lstlisting}
+\end{itemize}

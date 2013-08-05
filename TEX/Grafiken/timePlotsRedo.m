@@ -12,6 +12,14 @@ par_cg = [0.8422 6.5692 54.327 459.899 3641.48];
 par_goto_assembly = [0.204 0.845 3.68 16.01 68.1];
 par_goto_cg = [0.551 4.468 40.657 329.28 2589.78];
 
+orig_serial_cg_counts = [33025 131585 525313 2099201];
+orig_serial_assembly = [0.080795 0.328981 1.30698 ];
+orig_serial_cg = [0.514473 5.24624 44.4589 ];
+
+orig_par_cg_counts = [33284 132100 526340 2101252 8396804];
+orig_par_assembly = [];
+orig_par_cg = [];
+
 lw=1.3;
 figure; 
 loglog(serial_cg_counts, serial_assembly,'-rx','LineWidth',2*lw); hold on;

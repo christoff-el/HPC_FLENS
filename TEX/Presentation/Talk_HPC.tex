@@ -1,0 +1,436 @@
+
+\documentclass[10pt, a4paper, mathserif]{beamer} %Standardklasse f�r Beamer 
+% Option mathserif f�hrt zu mathematischen Zeichen mit Serifen
+
+% Sprache und Kodierung
+\usepackage[T1]{fontenc}
+\usepackage[ngerman,english]{babel}
+%\usepackage[ngerman]{babel} % Umlaute (wahlweise )
+%\usepackage[latin1]{inputenc} % F�r Windows
+\usepackage[applemac]{inputenc} % F�r Mac
+
+%chris
+%\usepackage{caption}
+%\usepackage{animate}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{pgfplots}
+\usetikzlibrary{plotmarks}
+%\usepackage{epsfig} 
+%\usepackage{epstopdf}
+
+% code
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAZEN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{positioning}
+
+\definecolor{myback}{HTML}{FFFFCC}
+\lstset{language=C++,
+		backgroundcolor=\color{myback},
+		breaklines=true,
+		commentstyle=\itshape\color{green!40!black},
+		frame=L,
+		numbers=left,
+		basicstyle=\footnotesize\ttfamily,
+		identifierstyle=\color{blue},
+		stringstyle=\color{orange},
+		keywordstyle=\color{red}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAZEN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\newcommand{\<}{$\langle$}
+\let\>=\undefined
+\newcommand{\>}{$\rangle$}
+\newcommand{\double}{{\color{blue}double}}
+\let\int=\undefined
+\newcommand{\int}{{\color{blue}int}}
+
+%\usepackage{placeins}
+\pgfplotsset{compat=1.3}
+%\usepackage{subcaption}
+
+% Schriftart 
+\usepackage{avant} % serifenlos
+
+% Mathematische Symbole und Umgebungen
+%\usepackage{amsmath, amsthm, amsfonts}
+\usepackage{mathtools}
+% \usepackage{amsmath} % loaded by mathtools
+\usepackage{amsthm}
+
+% Grafiken
+\usepackage{graphicx,ae}
+
+% Erm�glicht das Einbinden von Filmen
+\usepackage{multimedia}
+
+%\usepackage{array}
+
+% math fonts
+\usepackage{amssymb}
+\usepackage{dsfont}
+
+
+% definition of math operators
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator*{\argmin}{argmin}
+%\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\udN}{u. d. N.}
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\epi}{epi} % epigraph
+\DeclareMathOperator{\interior}{int} % interior
+\DeclareMathOperator{\closure}{cl} % closure
+\DeclareMathOperator{\aff}{aff} % affine hull
+\DeclareMathOperator{\ri}{ri} % relative interior
+\newcommand{\argmax}[1]{\underset{#1}{\operatorname{arg}\,\operatorname{max}}\;}
+
+% define paired delimiters
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclarePairedDelimiter\inner{\langle}{\rangle}
+\DeclarePairedDelimiter\set{\lbrace}{\rbrace}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% define symbolcs
+\newcommand{\NN}{\ensuremath{\mathds{N}}}  % natural numbers
+\newcommand{\ZZ}{\ensuremath{\mathds{Z}}}  % whole numbers
+\newcommand{\QQ}{\ensuremath{\mathds{Q}}}  % rational numbers
+\newcommand{\RR}{\ensuremath{\mathds{R}}}  % real numbers
+\newcommand{\CC}{\ensuremath{\mathds{C}}}  % complex numbers
+\newcommand{\cC}{\ensuremath{\mathcal{C}}} % continuous functions
+\newcommand{\cN}{\ensuremath{\mathcal{N}}} % calligraphic N
+\newcommand{\cB}{\ensuremath{\mathcal{B}}} % bundle
+\newcommand{\cU}{\ensuremath{\mathcal{U}}} % u-space
+\newcommand{\cV}{\ensuremath{\mathcal{V}}} % v-space
+\newcommand{\cG}{\ensuremath{\mathcal{G}}} % graph
+\newcommand{\cE}{\ensuremath{\mathcal{E}}} % edge set
+\newcommand{\PD}{\ensuremath{S^n_{++}}}     % positive definite symmetric n-by-n matrix
+\newcommand{\PSD}{\ensuremath{S^n_{+}}}     % positive semi-definite symmetric n-by-n matrix
+\newcommand{\BB}{\ensuremath{\mathds{B}}}  % unit ball
+\newcommand{\ones}{\ensuremath{\mathds{1}}}
+\newcommand{\RRp}{\ensuremath{(\RR \cup \set{+\infty})}}
+\newcommand{\RRn}{\ensuremath{(\RR \cup \set{-\infty})}}
+\newcommand{\RRpn}{\ensuremath{(\RR \cup \set{-\infty,+\infty})}}
+\newcommand{\Ff}{\ensuremath{\mathcal{F}}} %curly F
+\newcommand{\FF}{\ensuremath{\mathds{F}}} %filtration F
+\newcommand{\PP}{\ensuremath{\mathds{P}}} %double barrel P
+\newcommand{\Tt}{\ensuremath{\mathcal{T}}} %curly T
+\newcommand{\EE}{\ensuremath{\mathds{E}}} %expectation
+\newcommand{\Rr}{\ensuremath{\mathcal{R}}} %regression
+\newcommand{\Nn}{\ensuremath{\mathcal{N}}} %normal distribution
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usetheme{Boadilla} % Pr�sentationsthema, bestimmt die Details einer Folie
+
+\definecolor{ecs100}{RGB}{86,170,28}
+\setbeamercolor{structure}{fg=ecs100,bg=white}
+\setbeamercolor{alerted text}{fg=ecs100}
+\setbeamertemplate{section in toc}[default]
+
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{headline}
+{%
+\vspace*{2.5ex}%
+\begin{beamercolorbox}[wd=0.09\textwidth,ht=2ex,dp=0.5ex,leftskip=.5em,rightskip=.5em]{author in head/foot}%
+\usebeamerfont{author in head/foot}%
+Page \insertframenumber%
+\end{beamercolorbox}%
+\vspace*{-1.75ex}%
+\hspace*{0.07\textwidth}%
+\begin{beamercolorbox}[wd=0.92\textwidth,ht=2ex,dp=0.5ex,right,leftskip=.5em]{title}%
+\begin{picture}(0,0)
+\put(0,0.5){\rule[1.8ex]{\textwidth}{0.2ex}}\end{picture}% 2ex - 0.2ex = 1.8ex
+{\usebeamerfont{title in head/foot}%
+\qquad \insertshorttitle \hfill \insertsubsection $\leftarrow$\insertsection \break}
+\end{beamercolorbox}%
+}
+
+\setbeamertemplate{frametitle}
+{%
+\vspace*{1ex}%
+\usebeamercolor{title} \bf \large \insertframetitle%
+\vspace*{-0.5ex} }
+
+\setbeamertemplate{footline}{}
+
+\setbeamertemplate{navigation symbols}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{A Reimplementation of the Finite Element Method Software Package using FLENS}
+\author{Mazen Ali, Christopher Davis}
+\institute{University of Ulm}
+\date{\today}
+
+\setcounter{framenumber}{-1}
+
+%MY DEFINITIONS BEGIN
+\def\r#1{{\color{red}#1}}
+\def\g#1{{\color{green}#1}}
+\def\mg#1{{\color{ecs100}#1}}
+\def\titlefont#1{\textbf{\large\mg{#1}}}
+
+%\newtheorem{corollary}{Corollary}
+\newtheorem{rem}{Remark}
+\newtheorem{defi}{Definition}
+%MY DEFINTIONS END
+
+%%%%%%BEGIN DOCUMENT%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Titel Seite---------------------------------------------------------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\frame[plain]{
+  \begin{flushright}
+  \includegraphics[width=0.4\linewidth]{Grafiken/UniLogo.pdf}
+  \end{flushright}
+  \vfill
+  % Hier k�nnt ihr ein Titelbild einbinden, m�sst ihr aber nicht
+  \vfill
+  \parbox{0.24\linewidth}
+  {
+    \tiny \insertauthor\\ \insertinstitute\\ \insertdate
+  }
+  \parbox{0.75\linewidth}
+  {
+    \textcolor{ecs100}{\large\inserttitle}\\[0.2cm]
+    \textcolor{ecs100}{\insertsubtitle}
+  }
+}
+
+\section{Introduction}
+\frame{
+\textcolor{ecs100}{\huge{Introduction}}\\[0.2cm]
+}
+
+\frame{
+\frametitle{Introduction}
+\begin{itemize}
+   \item <2-> Primary aim: to reimplement the basic FEM package using the Flexible Library for Efficient Numerical Solutions (FLENS).
+   \begin{itemize}
+   	\item[$\hookrightarrow$] <2-> FLENS offers implementations of matrix/vector storage types, together with the associated linear algebra operations.
+   	%\item[$\hookrightarrow$] <3-> As well as standardisation, FLENS offers several
+   \end{itemize}
+   \item[] <2->
+   \item <3-> Objectives:
+   \begin{enumerate}
+   	\item <4-> Replace all data storage objects in the FEM package with FLENS-based objects.
+   	\vspace{0.3cm}
+   	\item <5-> Replace linear algebra operations with BLAS equivalents.
+   	\vspace{0.3cm}
+   	\item <6-> Offer two versions of solvers, one using BLAS notation, one using overloaded operators.
+   \end{enumerate}
+\end{itemize}
+}
+
+\section{Introduction}
+\frame{
+\textcolor{ecs100}{\huge{Replacing data storage objects}}\\[0.2cm]
+}
+
+\frame{
+\frametitle{Replacing data storage objects}
+\begin{itemize}
+	\item <2-> Some objects can be directly converted:
+	\begin{equation*}
+	\begin{array}{rcl}
+   	\mbox{\texttt{Vector}}  &  \rightarrow  &  \mbox{\texttt{DenseVector\<Array\<\double\> \>}} \\
+   	\mbox{\texttt{IndexVector}} & \rightarrow & \mbox{\texttt{DenseVector\<Array\<\int\> \>}}
+	\end{array}
+	\end{equation*}
+	\item[] <2->
+	\item <3-> FLENS offers a CRS matrix implementation, but it must be initialised from a sparse matrix using the coordinate storage scheme.
+\end{itemize}
+}
+
+\begin{frame}[fragile]
+\frametitle{The FLENSDataVector}
+\begin{itemize}
+	\item <2-> The biggest change was the \texttt{DataVector} storage class, since it contains additional objects and methods for the parallel MPI communications.
+	\vspace{0.2cm}
+	\item <3-> We replaced this class with our own \texttt{FLENSDataVector} class:
+	\begin{itemize}
+		\item[$\hookrightarrow$] <3-> Derived from a FLENS \texttt{DenseVector}:
+	\end{itemize}
+
+\item[] <3->\begin{lstlisting}
+template <typename VTYPE = FLvNonMPI>
+struct FLENSDataVector
+        : public DenseVector<Array<double> 
+{ ... }
+\end{lstlisting}
+
+	\item[] <4-> 
+	\begin{itemize}
+		\item[$\hookrightarrow$] Contains almost all objects and methods from the \texttt{DataVector}:
+	\end{itemize}
+
+\begin{lstlisting}
+	const Coupling &coupling;
+
+	void typeII_2_I();
+	void typeI_2_II();
+	
+	void commCrossPoints();
+	void commBoundaryNodes();
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+		
+\begin{frame}[fragile]
+\frametitle{The FLENSDataVector}
+\begin{itemize}
+	\item <2-> Instead of the MPI vector type as a member enumerated object, the type is specified (permanently) at instantiation:
+	\begin{lstlisting}
+//Vector types:
+class FLvNonMPI;
+class FLvTypeI;
+class FLvTypeII;
+	\end{lstlisting}
+	\item[] <3-> 
+	\begin{lstlisting}
+FLENSDataVector<FLvTypeI> myVector(20, myCoupling);
+\end{lstlisting}
+	\item <4-> Clever specialisations of constructors prevents inappropriate usage.
+	\item[] <5->
+	\vspace{0.3cm}
+	\begin{itemize}
+		\item[$\hookrightarrow$] More rigorous.
+		\vspace{0.1cm}
+		\item[$\hookrightarrow$] <6-> Makes many assertions redundant, as all type checking is done at compile time.
+	\end{itemize}
+	
+\end{itemize}
+\end{frame}
+	
+\section{Introduction}
+\frame{
+\textcolor{ecs100}{\huge{BLAS and the Conjugate Gradient solver}}\\[0.2cm]
+}
+
+\begin{frame}[fragile]
+\frametitle{BLAS}
+\begin{itemize}
+	\item <2-> Basic Linear Algebra Suite
+	\vspace{0.3cm}
+	\begin{itemize}
+		\item[$\hookrightarrow$] Included in FLENS.
+		\vspace{0.3cm}
+		\item[$\hookrightarrow$] Available via overloaded operators in FLENS.
+	\end{itemize}
+	\vspace{0.3cm}
+	\item <3-> GotoBLAS / OpenBLAS / ATLAS
+	\vspace{0.3cm}
+	\begin{itemize}
+		\item[$\hookrightarrow$] Basically `supercharged' BLAS routines, usually optimised for a specific processor.
+		\vspace{0.3cm}
+		\item[$\hookrightarrow$] Can be linked into FLENS (to replace FLENS BLAS routines) trivially\\ (one compiler flag + linker paths).
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{BLAS}
+\begin{itemize}
+	\item <1-> FEM Package function call:
+	\begin{lstlisting}
+CRSmatVec(p,A,x);
+add(r2,p,-1.);
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{BLAS}
+\begin{itemize}
+	\item <1-> Our function call via BLAS:
+	\begin{lstlisting}
+blas::mv(NoTrans, 1., A, x, 0., p); 
+blas::axpy(-1., p, r2);
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{BLAS}
+\begin{itemize}
+	\item <1-> Our function call via overloaded operators:
+	\begin{lstlisting}
+p = A*x;
+r2 = r2 - p;
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{BLAS}
+\begin{itemize}
+	\item <-1> Care was taken when overloading BLAS operations that require MPI communications:
+	\begin{lstlisting}
+//Overloaded dot - performs appropriate communication:
+double
+dot(const FLENSDataVector<FLvTypeI> &x1, 
+    const FLENSDataVector<FLvTypeII> &x2)
+{
+  //Upcast to DenseVector, and use the standard blas::dot:
+  double value = 
+      blas::dot(
+        *static_cast<const DenseVector<Array<double> > *>(&x1),
+        *static_cast<const DenseVector<Array<double> > *>(&x2)
+      );
+
+  double v = 0;
+  //*** Communication to add values from other processes ***/
+  MPI::COMM_WORLD.Allreduce(&value,&v,1,MPI::DOUBLE,MPI::SUM);
+
+  return v;
+}
+	\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\frame{
+\begin{figure}
+      \centering
+      \newlength\figureheight
+      \newlength\figurewidth
+      \setlength\figureheight{6cm}
+      \setlength\figurewidth{10cm}
+      \input{../Grafiken/assemblyPlot.tikz}
+      \label{fig:assembly}
+\end{figure}
+}
+
+\frame{
+\begin{figure}
+      \centering
+      \setlength\figureheight{6cm}
+      \setlength\figurewidth{10cm}
+      \input{../Grafiken/solvePlot.tikz}
+      \label{fig:solver}
+\end{figure}
+}
+
+\section{The End}
+\frame{
+\textcolor{ecs100}{\huge{The End}}\\[0.2cm]
+}
+
+
+
+\end{document}

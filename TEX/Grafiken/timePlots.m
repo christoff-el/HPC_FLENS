@@ -39,7 +39,7 @@ loglog(par_cg_counts, par_goto_cg, '-mx','LineWidth',lw);
 xlabel('Mesh Element Count');
 ylabel('Computation time');
 title('Serial vs. Parallel for System Solving')
-legend('Serial CG','Serial CG with GotoBLAS','Parallel CG','Parallel G with GotoBLAS','Location','NorthWest')
+legend('Serial CG','Serial CG with GotoBLAS','Parallel CG','Parallel CG with GotoBLAS','Location','NorthWest')
 matlab2tikz('solvePlot.tikz', 'height', '\figureheight', 'width', '\figurewidth','strict',true);
 close all;
 
